@@ -1,5 +1,7 @@
 package com.bekwam.resignator.model;
 
+import com.bekwam.resignator.ActiveProfile;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -24,7 +26,7 @@ public interface ConfigurationDataSource {
      *
      * @since 1.0.0
      */
-    void saveProfile();
+    void saveProfile() throws IOException;
 
     /**
      * Saves activeProfile under a new name
@@ -61,4 +63,12 @@ public interface ConfigurationDataSource {
      * @since 1.0.0
      */
     void saveConfiguration() throws IOException;
+
+    /**
+     * Returns the FX object ActiveProfile
+     *
+     * @return
+     */
+    ActiveProfile getActiveProfile();
+
 }

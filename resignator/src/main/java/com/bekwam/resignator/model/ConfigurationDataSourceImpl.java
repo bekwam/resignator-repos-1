@@ -16,6 +16,8 @@
 package com.bekwam.resignator.model;
 
 import com.bekwam.jfxbop.data.BaseManagedDataSource;
+import com.bekwam.resignator.ActiveProfile;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -29,6 +31,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +50,8 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
 
     @Inject @Named("ConfigDir")
     String configDir;
+
+    private final ActiveProfile activeProfile = new ActiveProfile();
 
     private Optional<Configuration> configuration = Optional.empty();
     private Optional<File> configFile = Optional.empty();
@@ -75,8 +80,37 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     }
 
     @Override
-    public void saveProfile() {
+    public void saveProfile() throws IOException {
 
+        //
+        // Find Profile in Configuration and remove if exists
+        //
+        Iterator<Profile> iterator = configuration.get().getProfiles().iterator();
+        while( iterator.hasNext() ) {
+            Profile p = iterator.next();
+            if( Objects.equal(p.getProfileName(), activeProfile.getProfileName()) ) {
+                iterator.remove();
+            }
+        }
+
+        //
+        // Add a new or replacing profile
+        //
+        configuration.get().getProfiles().add( activeProfile.toProfile() );
+
+        //
+        // Mark this Profile as activeProfile
+        //
+        configuration.get().setActiveProfile(Optional.of( activeProfile.getProfileName() ));
+
+        //
+        // Verify that Profile is in recentProfiles
+        //
+        if( !configuration.get().getRecentProfiles().contains( activeProfile.getProfileName() ) ) {
+            configuration.get().getRecentProfiles().add(  activeProfile.getProfileName() );
+        }
+
+        saveConfiguration();
     }
 
     @Override
@@ -167,4 +201,6 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
             saveConfiguration();  // empty config
         }
     }
+
+    public ActiveProfile getActiveProfile() { return activeProfile; }
 }

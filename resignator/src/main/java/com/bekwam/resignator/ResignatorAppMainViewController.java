@@ -17,22 +17,23 @@ package com.bekwam.resignator;
 
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.bekwam.jfxbop.view.Viewable;
-import com.bekwam.resignator.model.Configuration;
 import com.bekwam.resignator.model.ConfigurationDataSource;
-import javafx.animation.*;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.SplitPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.util.Optional;
 
 
@@ -57,6 +58,12 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     VBox console;
 
+    @FXML
+    TextField tfSourceFile;
+
+    @FXML
+    TextField tfTargetFile;
+
     @Inject
     ConfigurationDataSource configurationDS;
 
@@ -66,11 +73,18 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @Inject @Named("ConfigFile")
     String configFile;
 
+    private StringProperty activeProfileName = new SimpleStringProperty("");  // a "hidden" field
+
     @FXML
     public void initialize() {
 
         try {
             configurationDS.loadConfiguration();
+
+            activeProfileName.bindBidirectional(configurationDS.getActiveProfile().profileNameProperty());
+            tfSourceFile.textProperty().bindBidirectional(configurationDS.getActiveProfile().sourceFileFileNameProperty());
+            tfTargetFile.textProperty().bindBidirectional( configurationDS.getActiveProfile().targetFileFileNameProperty() );
+
         } catch(Exception exc) {
 
             logger.error("can't load configuration", exc);
@@ -144,4 +158,63 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
         Platform.exit();
     }
+
+    @FXML
+    public void loadProfile() {
+
+
+    }
+
+    @FXML
+    public void saveProfile() {
+
+        if( logger.isDebugEnabled() ){
+            logger.debug("[SAVE PROFILE]");
+        }
+
+        if( activeProfileName.isEmpty().get() ) {
+
+            if( logger.isDebugEnabled() ){
+                logger.debug("[SAVE PROFILE] activeProfileName is empty");
+            }
+
+            Dialog dialog = new TextInputDialog();
+            dialog.setTitle("Profile name");
+            dialog.setHeaderText("Enter profile name");
+            Optional<String> result = dialog.showAndWait();
+
+            if( result.isPresent() ) {
+                activeProfileName.set(result.get());
+
+                try {
+                    configurationDS.saveProfile();  // saves active profile
+
+                    Stage s = (Stage) sp.getScene().getWindow();
+                    s.setTitle("ResignatorApp - " + result.get());
+                } catch(IOException exc) {
+                    logger.error( "error saving profile '" + result.get() + "'", exc );
+
+                    Alert alert = new Alert(
+                            Alert.AlertType.ERROR,
+                            exc.getMessage());
+                    alert.setHeaderText("Can't save profile");
+                    alert.showAndWait();
+                }
+
+            } else {
+                String msg = "A profile name is required";
+                Alert alert = new Alert(
+                        Alert.AlertType.ERROR,
+                        msg);
+                alert.setHeaderText("Can't save profile");
+                alert.showAndWait();
+            }
+        }
+    }
+
+    @FXML
+    public void saveAsProfile() {
+
+    }
+
 }
