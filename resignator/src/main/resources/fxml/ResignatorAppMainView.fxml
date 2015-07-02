@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
+   <children>
+      <MenuBar VBox.vgrow="NEVER">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem mnemonicParsing="false" onAction="#close" text="Close" />
+            </items>
+          </Menu>
+            <Menu mnemonicParsing="false" text="View">
+              <items>
+                  <CheckMenuItem mnemonicParsing="false" onAction="#showConsole" selected="true" text="Show Console" />
+              </items>
+            </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <SplitPane fx:id="sp" dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="ALWAYS">
+         <items>
+            <GridPane hgap="10.0" SplitPane.resizableWithParent="false">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Label text="Source JAR:" GridPane.halignment="RIGHT" />
+                  <TextField GridPane.columnIndex="1" />
+                  <Button mnemonicParsing="false" text="Browse" GridPane.columnIndex="2" />
+                  <Label text="Cert:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+                  <ComboBox GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <Button mnemonicParsing="false" text="Configure" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                  <HBox GridPane.columnIndex="1" GridPane.rowIndex="3">
+                     <children>
+                        <Button mnemonicParsing="false" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <ProgressIndicator progress="0.0">
+                           <HBox.margin>
+                              <Insets left="10.0" />
+                           </HBox.margin>
+                        </ProgressIndicator>
+                     </children>
+                  </HBox>
+                  <Label text="Target JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
+               </children>
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+            </GridPane>
+            <VBox fx:id="console">
+               <children>
+                  <HBox styleClass="consoleTitle" VBox.vgrow="NEVER">
+                     <children>
+                        <Label text="Console" />
+                     </children>
+                  </HBox>
+                <AnchorPane minHeight="0.0" minWidth="0.0" styleClass="console" VBox.vgrow="ALWAYS">
+                     <children>
+                        <TextArea AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children>
+                  </AnchorPane>
+               </children>
+            </VBox>
+         </items>
+      </SplitPane>
+      <Label text="Label" VBox.vgrow="NEVER">
+         <VBox.margin>
+            <Insets bottom="4.0" left="10.0" right="10.0" top="4.0" />
+         </VBox.margin>
+      </Label>
+   </children>
+</VBox>
