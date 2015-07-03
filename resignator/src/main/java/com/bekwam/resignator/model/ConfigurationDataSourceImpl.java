@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +79,18 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     @Override
     public void loadProfile(String profileName) {
 
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[LOAD PROFILE]");
+        }
+
+        Optional<Profile> profile = configuration.
+                    get().
+                    getProfiles().
+                    stream().
+                    filter( p -> StringUtils.equalsIgnoreCase(p.getProfileName(), profileName) ).
+                    findFirst();
+
+        activeProfile.loadFromProfile( profile.get() );
     }
 
     @Override
@@ -114,13 +128,14 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     }
 
     @Override
-    public void saveAsProfile(String newProfileName) {
-
+    public List<String> getRecentProfileNames() {
+        return null;
     }
 
     @Override
-    public List<Profile> getRecentProfiles() {
-        return null;
+    public List<Profile> getProfiles() {
+
+        return configuration.get().getProfiles();
     }
 
     @Override
@@ -145,12 +160,12 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
 
         Gson gson = new GsonBuilder().
                 registerTypeAdapter(Configuration.class, new ConfigurationJSONAdapter()).
+                setPrettyPrinting().
                 create();
 
         JsonWriter jw = new JsonWriter( new FileWriter( configFile.get() ) );
         gson.toJson( configuration.get(), Configuration.class, jw );
         jw.close();
-
     }
 
     private void initFileSystem() throws IOException {

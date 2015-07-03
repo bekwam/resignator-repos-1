@@ -18,6 +18,7 @@ package com.bekwam.resignator;
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.bekwam.jfxbop.view.Viewable;
 import com.bekwam.resignator.model.ConfigurationDataSource;
+import com.bekwam.resignator.model.Profile;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -28,14 +29,19 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 
 /**
  * JavaFX Controller and JFXBop View for the Resignator App
@@ -160,8 +166,87 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     }
 
     @FXML
+    public void newProfile() {
+
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[LOAD PROFILE]");
+        }
+
+        configurationDS.getActiveProfile().reset();
+
+        Stage s = (Stage) sp.getScene().getWindow();
+        s.setTitle("ResignatorApp");
+    }
+
+    @FXML
     public void loadProfile() {
 
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[LOAD PROFILE]");
+        }
+
+        //
+        // Get profiles from loaded Configuration object
+        //
+        List<Profile> profiles = configurationDS.getProfiles();
+
+        if( CollectionUtils.isEmpty(profiles) ) {
+
+            if(logger.isDebugEnabled() ) {
+                logger.debug("[LOAD PROFILE] no profiles");
+            }
+
+            String msg = "Select File > Save Profile to save the active profile.";
+            Alert alert = new Alert(
+                    Alert.AlertType.INFORMATION,
+                    msg);
+            alert.setHeaderText("No profiles saved");
+            alert.showAndWait();
+            return;
+        }
+
+        //
+        // Distill list of profile names from List of Profile objects
+        //
+        List<String> profileNames = profiles.
+                stream().
+                sorted(comparing(Profile::getProfileName)).
+                map(Profile::getProfileName).
+                collect(toList());
+
+        //
+        // Select default item which is active item if available otherwise first item
+        //
+        String defaultProfileName = profileNames.get(0);
+
+        //
+        // Prompt user for selection - default is first item
+        //
+        if( StringUtils.isNotEmpty(activeProfileName.getValue()) ) {
+            defaultProfileName = activeProfileName.getValue();
+        }
+
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[LOAD PROFILE] default profileName={}", defaultProfileName);
+        }
+
+        Dialog dialog = new ChoiceDialog<>(defaultProfileName, profileNames);
+        dialog.setTitle("Profile");
+        dialog.setHeaderText("Select profile ");
+        Optional<String> result = dialog.showAndWait();
+
+        if( !result.isPresent() ) {
+            return; // cancel
+        }
+
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[LOAD PROFILE] selected={}", result.get());
+        }
+
+        configurationDS.loadProfile( result.get() );
+
+        Stage s = (Stage) sp.getScene().getWindow();
+        s.setTitle("ResignatorApp - " + result.get());
 
     }
 
@@ -209,12 +294,90 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 alert.setHeaderText("Can't save profile");
                 alert.showAndWait();
             }
+        } else { // just save
+
+            if( logger.isDebugEnabled() ){
+                logger.debug("[SAVE PROFILE] there is an active profile");
+            }
+
+            try {
+                configurationDS.saveProfile();  // saves active profile
+            } catch(IOException exc) {
+                logger.error( "error saving profile '" + activeProfileName.get() + "'", exc );
+
+                Alert alert = new Alert(
+                        Alert.AlertType.ERROR,
+                        exc.getMessage());
+                alert.setHeaderText("Can't save profile");
+                alert.showAndWait();
+            }
+
         }
     }
 
     @FXML
     public void saveAsProfile() {
 
+        Dialog dialog = new TextInputDialog();
+        dialog.setTitle("Profile name");
+        dialog.setHeaderText("Enter profile name");
+        Optional<String> result = dialog.showAndWait();
+
+        if( result.isPresent() ) {
+
+            //
+            // Check for uniqueness; prompt for overwrite
+            //
+            if( profileNameInUse(result.get()) ) {
+                if( logger.isDebugEnabled() ) {
+                    logger.debug("[SAVE AS] profile name in use; prompt for overwrite");
+                }
+                Alert alert = new Alert(
+                        Alert.AlertType.CONFIRMATION,
+                        "Overwrite existing profile '" + result.get() + "'?");
+                alert.setHeaderText("Profile name in use");
+                Optional<ButtonType> response = alert.showAndWait();
+                if( !response.isPresent() || response.get() != ButtonType.OK ) {
+                    if( logger.isDebugEnabled() ) {
+                        logger.debug("[SAVE AS] overwrite canceled");
+                    }
+                    return;
+                }
+            }
+
+            activeProfileName.set(result.get());  // activeProfile object tweaked w. new name
+
+            try {
+                configurationDS.saveProfile();
+
+                Stage s = (Stage) sp.getScene().getWindow();
+                s.setTitle("ResignatorApp - " + result.get());
+
+            } catch(IOException exc) {
+                logger.error( "error saving profile '" + result.get() + "'", exc );
+
+                Alert alert = new Alert(
+                        Alert.AlertType.ERROR,
+                        exc.getMessage());
+                alert.setHeaderText("Can't save profile");
+                alert.showAndWait();
+            }
+
+        } else {
+            String msg = "A profile name is required";
+            Alert alert = new Alert(
+                    Alert.AlertType.ERROR,
+                    msg);
+            alert.setHeaderText("Can't save profile");
+            alert.showAndWait();
+        }
     }
 
+    boolean profileNameInUse(String profileName) {
+        return configurationDS.
+                getProfiles().
+                stream().
+                filter(p -> StringUtils.equalsIgnoreCase(p.getProfileName(), profileName)).
+                count() > 0;
+    }
 }

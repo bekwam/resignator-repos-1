@@ -29,16 +29,6 @@ public interface ConfigurationDataSource {
     void saveProfile() throws IOException;
 
     /**
-     * Saves activeProfile under a new name
-     *
-     * Makes save as Profile the new activeProfile
-     *
-     * @param newProfileName new name of Profile to save and make the activeProfile
-     * @since 1.0.0
-     */
-    void saveAsProfile(String newProfileName);
-
-    /**
      * Returns a list of recently-used Profiles
      *
      * Will remove deleted Profiles from list and re-save
@@ -46,7 +36,15 @@ public interface ConfigurationDataSource {
      * @return List of valid Profile objects
      * @since 1.0.0
      */
-    List<Profile> getRecentProfiles();
+    List<String> getRecentProfileNames();
+
+    /**
+     * Returns a list of Profiles
+     *
+     * @return List of valid Profile objects
+     * @since 1.0.0
+     */
+    List<Profile> getProfiles();
 
     /**
      * Loads the Configuration including all Profiles
