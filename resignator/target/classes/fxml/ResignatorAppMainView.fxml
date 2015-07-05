@@ -16,6 +16,8 @@
                   <MenuItem mnemonicParsing="false" onAction="#saveProfile" text="Save Profile" />
                   <MenuItem mnemonicParsing="false" onAction="#saveAsProfile" text="Save As Profile" />
                   <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#openSettings" text="Settings" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
               <MenuItem mnemonicParsing="false" onAction="#close" text="Close" />
             </items>
           </Menu>
@@ -48,13 +50,13 @@
                <children>
                   <Label text="Source JAR:" GridPane.halignment="RIGHT" />
                   <TextField fx:id="tfSourceFile" GridPane.columnIndex="1" />
-                  <Button mnemonicParsing="false" text="Browse" GridPane.columnIndex="2" />
+                  <Button mnemonicParsing="false" onAction="#browseSource" text="Browse" GridPane.columnIndex="2" />
                   <Label text="Cert:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
                   <ComboBox GridPane.columnIndex="1" GridPane.rowIndex="2" />
                   <Button mnemonicParsing="false" text="Configure" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                   <HBox GridPane.columnIndex="1" GridPane.rowIndex="3">
                      <children>
-                        <Button mnemonicParsing="false" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <Button mnemonicParsing="false" onAction="#sign" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                         <ProgressIndicator progress="0.0">
                            <HBox.margin>
                               <Insets left="10.0" />
@@ -64,6 +66,15 @@
                   </HBox>
                   <Label text="Target JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
                   <TextField fx:id="tfTargetFile" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <HBox alignment="CENTER_LEFT" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#browseTarget" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                        <Button mnemonicParsing="false" onAction="#copySourceToTarget" text="Copy">
+                           <HBox.margin>
+                              <Insets left="2.0" />
+                           </HBox.margin></Button>
+                     </children>
+                  </HBox>
                </children>
                <VBox.margin>
                   <Insets />

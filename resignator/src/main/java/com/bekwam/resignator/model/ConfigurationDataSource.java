@@ -69,4 +69,10 @@ public interface ConfigurationDataSource {
      */
     ActiveProfile getActiveProfile();
 
+    /**
+     * Sets the jarsignerExec property
+     *
+     */
+    void setJarsignerExec(String jarsignerExec);
+
 }

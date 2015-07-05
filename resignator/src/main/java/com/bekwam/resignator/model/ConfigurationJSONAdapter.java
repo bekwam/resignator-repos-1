@@ -16,6 +16,7 @@
 package com.bekwam.resignator.model;
 
 import com.google.gson.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,16 +46,29 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
 
         JsonObject obj = (JsonObject)jsonElement;
 
+        JsonElement apElement = obj.get("activeProfile");
+        String ap = "";
+        if( apElement != null ) {
+            ap = apElement.getAsString();
+        }
+
+        JsonElement jeElement = obj.get("jarsignerExecutable");
+        String jarsignerExecutable = "";
+        if( jeElement != null ) {
+            jarsignerExecutable = jeElement.getAsString();
+        }
+
         JsonArray recentProfiles = obj.getAsJsonArray("recentProfiles");
-        String ap = obj.getAsJsonPrimitive("activeProfile").getAsString();
         JsonArray profiles = obj.getAsJsonArray("profiles");
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[DESERIALIZE] rp={}, ap={}, profiles={}", recentProfiles.toString(), ap, profiles.toString());
+            logger.debug("[DESERIALIZE] rp={}, ap={}, jarsigner={}, profiles={}",
+                    recentProfiles.toString(), ap, jarsignerExecutable,  profiles.toString());
         }
 
         Configuration conf = new Configuration();
         conf.setActiveProfile(Optional.of(ap));
+        conf.setJarsignerExecutable(Optional.of(jarsignerExecutable));
         conf.getRecentProfiles().addAll( deserializeRecentProfiles(recentProfiles) );
         conf.getProfiles().addAll( deserializeProfiles(profiles) );
 
@@ -159,13 +173,15 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
         }
 
         String ap = configuration.getActiveProfile().orElse("");
+        String jarsignerExecutable = configuration.getJarsignerExecutable().orElse("");
         JsonArray profiles = serializeProfiles( configuration.getProfiles() );
 
         JsonObject root = new JsonObject();
         root.addProperty("activeProfile", ap );
+        root.addProperty("jarsignerExecutable", jarsignerExecutable);
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[SERIALIZE] ap={}", ap);
+            logger.debug("[SERIALIZE] ap={}, jarsignerExecutable={}", ap, jarsignerExecutable);
         }
 
         root.add( "recentProfiles", serializeRecentProfiles(configuration.getRecentProfiles()) );

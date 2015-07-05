@@ -27,6 +27,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.apache.commons.collections.CollectionUtils;
@@ -36,6 +37,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -79,7 +82,11 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @Inject @Named("ConfigFile")
     String configFile;
 
+    @Inject
+    Provider<SettingsController> settingsControllerProvider;
+
     private StringProperty activeProfileName = new SimpleStringProperty("");  // a "hidden" field
+    private String defaultDir = System.getProperty("user.home");
 
     @FXML
     public void initialize() {
@@ -379,5 +386,77 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 stream().
                 filter(p -> StringUtils.equalsIgnoreCase(p.getProfileName(), profileName)).
                 count() > 0;
+    }
+
+    @FXML
+    public void browseSource() {
+        if( logger.isDebugEnabled() ){
+            logger.debug("[BROWSE SOURCE]");
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Source JAR");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("JAR", "*.jar")
+        );
+
+        File f = fileChooser.showOpenDialog(stage);
+        if( f != null ) {
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[BROWSE SOURCE] selected file={}", f.getAbsolutePath());
+            }
+            tfSourceFile.setText( f.getAbsolutePath() );
+        }
+    }
+
+    @FXML
+    public void browseTarget() {
+        if( logger.isDebugEnabled() ){
+            logger.debug("[BROWSE TARGET]");
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Target JAR");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("JAR", "*.jar")
+        );
+
+        File f = fileChooser.showOpenDialog(stage);
+        if( f != null ) {
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[BROWSE TARGET] selected file={}", f.getAbsolutePath());
+            }
+            tfTargetFile.setText( f.getAbsolutePath() );
+        }
+    }
+
+    @FXML
+    public void copySourceToTarget() {
+        if( logger.isDebugEnabled() ){
+            logger.debug("[COPY SOURCE TO TARGET]");
+        }
+        tfTargetFile.setText( tfSourceFile.getText() );
+    }
+
+    @FXML
+    public void sign() {
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[SIGN] activeProfile sourceFile={}, targetFile={}",
+                    configurationDS.getActiveProfile().getSourceFileFileName(),
+                    configurationDS.getActiveProfile().getTargetFileFileName() );
+        }
+    }
+
+    @FXML
+    public void openSettings() {
+        SettingsController settingsView = settingsControllerProvider.get();
+        try {
+            settingsView.show();  // ignoring the primaryStage
+        } catch(Exception exc) {
+            String msg = "Error launching Settings";
+            logger.error( msg, exc );
+            Alert alert = new Alert(Alert.AlertType.ERROR, msg);
+            alert.showAndWait();
+        }
     }
 }

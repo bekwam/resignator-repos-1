@@ -218,4 +218,9 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     }
 
     public ActiveProfile getActiveProfile() { return activeProfile; }
+
+    @Override
+    public void setJarsignerExec(String jarsignerExec) {
+        configuration.get().setJarsignerExecutable( Optional.of(jarsignerExec) );
+    }
 }

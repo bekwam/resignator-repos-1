@@ -25,9 +25,16 @@ import java.util.Optional;
  */
 public class Configuration {
 
+    private Optional<String> jarsignerExecutable = Optional.empty();
     private Optional<String> activeProfile = Optional.empty();
     private final List<String> recentProfiles = new ArrayList<>();
     private final List<Profile> profiles = new ArrayList<>();
+
+    public Optional<String> getJarsignerExecutable() { return jarsignerExecutable; }
+
+    public void setJarsignerExecutable(Optional<String> jarsignerExecutable) {
+        this.jarsignerExecutable = jarsignerExecutable;
+    }
 
     public Optional<String> getActiveProfile() {
         return activeProfile;
@@ -48,7 +55,8 @@ public class Configuration {
     @Override
     public String toString() {
         return "Configuration{" +
-                "activeProfile=" + activeProfile +
+                "jarsignerExecutable=" + jarsignerExecutable +
+                ", activeProfile=" + activeProfile +
                 ", recentProfiles=" + recentProfiles +
                 ", profiles=" + profiles +
                 '}';
