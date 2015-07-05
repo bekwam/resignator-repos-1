@@ -96,7 +96,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     Provider<SettingsController> settingsControllerProvider;
 
     private StringProperty activeProfileName = new SimpleStringProperty("");  // a "hidden" field
-    private String defaultDir = System.getProperty("user.home");
+    //private String defaultDir = System.getProperty("user.home");
 
     @FXML
     public void initialize() {
@@ -247,7 +247,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             logger.debug("[LOAD PROFILE] default profileName={}", defaultProfileName);
         }
 
-        Dialog dialog = new ChoiceDialog<>(defaultProfileName, profileNames);
+        Dialog<String> dialog = new ChoiceDialog<>(defaultProfileName, profileNames);
         dialog.setTitle("Profile");
         dialog.setHeaderText("Select profile ");
         Optional<String> result = dialog.showAndWait();
@@ -280,7 +280,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 logger.debug("[SAVE PROFILE] activeProfileName is empty");
             }
 
-            Dialog dialog = new TextInputDialog();
+            Dialog<String> dialog = new TextInputDialog();
             dialog.setTitle("Profile name");
             dialog.setHeaderText("Enter profile name");
             Optional<String> result = dialog.showAndWait();
@@ -335,7 +335,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     public void saveAsProfile() {
 
-        Dialog dialog = new TextInputDialog();
+        Dialog<String> dialog = new TextInputDialog();
         dialog.setTitle("Profile name");
         dialog.setHeaderText("Enter profile name");
         Optional<String> result = dialog.showAndWait();
