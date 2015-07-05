@@ -16,7 +16,6 @@
 package com.bekwam.resignator.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 

@@ -15,9 +15,19 @@
  */
 package com.bekwam.resignator;
 
+import java.io.File;
+import java.io.IOException;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.bekwam.jfxbop.view.Viewable;
 import com.bekwam.resignator.model.ConfigurationDataSource;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
@@ -28,15 +38,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
-import javafx.util.StringConverter;
 import javafx.util.converter.DefaultStringConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Captures application-wide settings

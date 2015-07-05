@@ -1,5 +1,8 @@
 package com.bekwam.resignator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bekwam.jfxbop.data.ManagedDataSource;
 import com.bekwam.jfxbop.data.ManagedDataSourceInterceptor;
 import com.bekwam.resignator.model.ConfigurationDataSource;
@@ -7,10 +10,9 @@ import com.bekwam.resignator.model.ConfigurationDataSourceImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
+
 import javafx.fxml.JavaFXBuilderFactory;
 import javafx.util.BuilderFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by carl_000 on 6/29/2015.

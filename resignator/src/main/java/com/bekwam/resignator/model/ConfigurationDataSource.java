@@ -1,9 +1,9 @@
 package com.bekwam.resignator.model;
 
-import com.bekwam.resignator.ActiveProfile;
-
 import java.io.IOException;
 import java.util.List;
+
+import com.bekwam.resignator.ActiveProfile;
 
 /**
  * Main DAO for access all settings / preferences info in the app

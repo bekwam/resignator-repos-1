@@ -15,16 +15,17 @@
  */
 package com.bekwam.resignator;
 
+import java.util.Optional;
+
 import com.bekwam.resignator.model.JarsignerConfig;
 import com.bekwam.resignator.model.Profile;
 import com.bekwam.resignator.model.SourceFile;
 import com.bekwam.resignator.model.TargetFile;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-
-import java.util.Optional;
 
 /**
  * @author carl_000
