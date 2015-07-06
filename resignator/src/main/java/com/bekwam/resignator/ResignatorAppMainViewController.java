@@ -28,6 +28,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +97,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     Provider<SettingsController> settingsControllerProvider;
 
     private StringProperty activeProfileName = new SimpleStringProperty("");  // a "hidden" field
-    //private String defaultDir = System.getProperty("user.home");
+    private String jarDir = System.getProperty("user.home");
 
     @FXML
     public void initialize() {
@@ -406,6 +407,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Source JAR");
+        fileChooser.setInitialDirectory(new File(jarDir));
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("JAR", "*.jar")
         );
@@ -416,6 +418,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 logger.debug("[BROWSE SOURCE] selected file={}", f.getAbsolutePath());
             }
             tfSourceFile.setText( f.getAbsolutePath() );
+
+            jarDir = FilenameUtils.getFullPath(f.getAbsolutePath());
         }
     }
 
@@ -427,6 +431,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Target JAR");
+        fileChooser.setInitialDirectory(new File(jarDir));
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("JAR", "*.jar")
         );
@@ -437,6 +442,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 logger.debug("[BROWSE TARGET] selected file={}", f.getAbsolutePath());
             }
             tfTargetFile.setText( f.getAbsolutePath() );
+
+            jarDir = FilenameUtils.getFullPath(f.getAbsolutePath());
         }
     }
 

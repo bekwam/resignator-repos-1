@@ -63,6 +63,8 @@ public class SettingsController extends GuiceBaseView {
 
     private StringProperty jarsignerExec = new SimpleStringProperty("");  // a "hidden" field
 
+    private String jarsignerDir = System.getProperty("java.home");
+    
     @FXML
     public void initialize() {
         if( logger.isDebugEnabled() ){
