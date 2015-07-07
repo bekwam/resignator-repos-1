@@ -26,6 +26,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -68,6 +69,7 @@ import javafx.util.Duration;
         stylesheet = "/css/resignator.css",
         title = "ResignatorApp"
 )
+@Singleton
 public class ResignatorAppMainViewController extends GuiceBaseView {
 
     private final static Logger logger = LoggerFactory.getLogger(ResignatorAppMainViewController.class);
@@ -96,6 +98,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @Inject
     Provider<SettingsController> settingsControllerProvider;
 
+    @Inject
+    Provider<JarsignerConfigController> jarsignerConfigControllerProvider;
+    
     private StringProperty activeProfileName = new SimpleStringProperty("");  // a "hidden" field
     private String jarDir = System.getProperty("user.home");
 
@@ -476,4 +481,18 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             alert.showAndWait();
         }
     }
+    
+    @FXML
+    public void openJarsignerConfig() {
+    	JarsignerConfigController jarsignerConfigView = jarsignerConfigControllerProvider.get();
+    	try {
+    		jarsignerConfigView.show();
+        } catch(Exception exc) {
+            String msg = "Error launching jarsigner config";
+            logger.error( msg, exc );
+            Alert alert = new Alert(Alert.AlertType.ERROR, msg);
+            alert.showAndWait();
+        }
+    }
+    
 }

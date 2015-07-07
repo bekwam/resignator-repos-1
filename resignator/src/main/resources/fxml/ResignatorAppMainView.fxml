@@ -53,7 +53,7 @@
                   <Button mnemonicParsing="false" onAction="#browseSource" text="Browse" GridPane.columnIndex="2" />
                   <Label text="Cert:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
                   <ComboBox GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  <Button mnemonicParsing="false" text="Configure" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                  <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                   <HBox GridPane.columnIndex="1" GridPane.rowIndex="3">
                      <children>
                         <Button mnemonicParsing="false" onAction="#sign" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2" />

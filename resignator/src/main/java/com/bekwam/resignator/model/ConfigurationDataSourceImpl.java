@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ import com.google.gson.stream.JsonWriter;
  * @author carl_000
  * @since 1.0.0
  */
+@Singleton
 public class ConfigurationDataSourceImpl extends BaseManagedDataSource implements ConfigurationDataSource {
 
     private final static Logger logger = LoggerFactory.getLogger(ConfigurationDataSourceImpl.class);
