@@ -18,6 +18,10 @@ package com.bekwam.resignator;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.google.common.base.Preconditions;
+import javafx.scene.control.*;
+import javafx.scene.paint.Color;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +32,6 @@ import com.bekwam.resignator.model.ConfigurationDataSource;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.TextField;
 import javafx.stage.Window;
 
 /**
@@ -53,47 +54,61 @@ public class JarsignerConfigController extends GuiceBaseView {
 	private TextField tfKeystore;
 	
 	@FXML
-	private TextField tfKeypass;
-	
+	private PasswordField pfKeypass;
+
 	@FXML
-	private TextField tfStorepass;
-	
+	private PasswordField pfConfKeypass;
+
+	@FXML
+	private PasswordField pfStorepass;
+
+	@FXML
+	private PasswordField pfConfStorepass;
+
 	@FXML
 	private TextField tfAlias;
 	
 	@FXML
 	private ChoiceBox<Boolean> cbVerbose;
-	
+
+	@FXML
+	private Label lblConfKeypass;
+
+	@FXML
+	private Label lblConfStorepass;
+
 	@Inject
 	private ConfigurationDataSource configurationDS;
-	
+
+	public void JarsignerConfigController() {
+		if( logger.isDebugEnabled() ) {
+			logger.debug("[CONSTRUCTOR]");
+		}
+	}
+
 	@FXML
 	public void initialize() {
 		
 		if( logger.isDebugEnabled() ) {
-			logger.debug("[INIT]");
+			logger.debug("[INIT] instance={}, configurationDS={}", this.hashCode(), configurationDS.hashCode());
 		}
 		
 		cbVerbose.getItems().addAll(Boolean.TRUE, Boolean.FALSE);
-		
-		configurationDS.getActiveProfile().jarsignerConfigAliasProperty().bindBidirectional(tfAlias.textProperty());
-		configurationDS.getActiveProfile().jarsignerConfigStorepassProperty().bindBidirectional(tfStorepass.textProperty());
-		configurationDS.getActiveProfile().jarsignerConfigKeystoreProperty().bindBidirectional(tfKeystore.textProperty());
-		configurationDS.getActiveProfile().jarsignerConfigKeypassProperty().bindBidirectional(tfKeypass.textProperty());
-		configurationDS.getActiveProfile().jarsignerConfigVerboseProperty().bindBidirectional(cbVerbose.valueProperty());
+
+		tfAlias.textProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigAliasProperty());
+		pfStorepass.textProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigStorepassProperty());
+		tfKeystore.textProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigKeystoreProperty());
+		pfKeypass.textProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigKeypassProperty());
+		cbVerbose.valueProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigVerboseProperty());
+
+		lblConfKeypass.setVisible(false);
+		lblConfStorepass.setVisible( false );
 	}
 	
 	@FXML
-	public void save() {
+	public void close(ActionEvent evt) {
 		if( logger.isDebugEnabled() ) {
-			logger.debug("[SAVE]");
-		}
-	}
-	
-	@FXML
-	public void cancel(ActionEvent evt) {
-		if( logger.isDebugEnabled() ) {
-			logger.debug("[CANCEL]");
+			logger.debug("[CLOSE]");
 		}
         Scene scene = ((Button)evt.getSource()).getScene();
         if( scene != null ) {
@@ -103,5 +118,67 @@ public class JarsignerConfigController extends GuiceBaseView {
             }
         }
 
+	}
+
+	@Override
+	public void show() throws Exception {
+		super.show();
+		if( logger.isDebugEnabled() ) {
+			logger.debug("[SHOW] instance={}, configurationDS={}", this.hashCode(), configurationDS.hashCode());
+		}
+
+		resetConfKeypass();
+		resetConfStorepass();
+	}
+
+	@FXML
+	public void resetConfKeypass() {
+		pfConfKeypass.setText("");
+
+		lblConfKeypass.setText("Ok");
+		lblConfKeypass.setTextFill(Color.GREEN);
+		lblConfKeypass.setVisible(false);
+	}
+
+	@FXML
+	public void verifyKeypass() {
+
+		Preconditions.checkNotNull(pfKeypass.textProperty());
+		Preconditions.checkNotNull(pfConfKeypass.textProperty());
+
+		if( StringUtils.equals(pfKeypass.textProperty().getValue(), pfConfKeypass.textProperty().getValue()) ) {
+			lblConfKeypass.setText("Ok");
+			lblConfKeypass.setTextFill(Color.GREEN);
+		} else {
+			lblConfKeypass.setText("Bad");
+			lblConfKeypass.setTextFill(Color.RED);
+		}
+
+		lblConfKeypass.setVisible(true);
+	}
+
+	@FXML
+	public void resetConfStorepass() {
+		pfConfStorepass.setText("");
+
+		lblConfStorepass.setText("Ok");
+		lblConfStorepass.setTextFill(Color.GREEN);
+		lblConfStorepass.setVisible(false);
+	}
+
+	@FXML
+	public void verifyStorepass() {
+
+		Preconditions.checkNotNull(pfStorepass.textProperty());
+		Preconditions.checkNotNull(pfConfStorepass.textProperty());
+
+		if( StringUtils.equals(pfStorepass.textProperty().getValue(), pfConfStorepass.textProperty().getValue()) ) {
+			lblConfStorepass.setText("Ok");
+			lblConfStorepass.setTextFill(Color.GREEN);
+		} else {
+			lblConfStorepass.setText("Bad");
+			lblConfStorepass.setTextFill(Color.RED);
+		}
+		lblConfStorepass.setVisible(true);
 	}
 }
