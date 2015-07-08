@@ -17,6 +17,8 @@ package com.bekwam.resignator;
 
 import java.util.Optional;
 
+import javax.inject.Singleton;
+
 import com.bekwam.resignator.model.JarsignerConfig;
 import com.bekwam.resignator.model.Profile;
 import com.bekwam.resignator.model.SourceFile;
@@ -30,7 +32,8 @@ import javafx.beans.property.StringProperty;
 /**
  * @author carl_000
  */
-public class ActiveProfile {
+@Singleton
+public class ActiveProfile implements ActiveRecord<Profile> {
 
     private StringProperty profileName = new SimpleStringProperty("");
     private StringProperty sourceFileFileName = new SimpleStringProperty("");
@@ -74,6 +77,7 @@ public class ActiveProfile {
     public StringProperty jarsignerConfigKeystoreProperty() { return jarsignerConfigKeystore; }
     public BooleanProperty jarsignerConfigVerboseProperty() { return jarsignerConfigVerbose; }
 
+    @Override
     public void reset() {
         profileName.setValue("");
         sourceFileFileName.setValue("");
@@ -85,7 +89,8 @@ public class ActiveProfile {
         jarsignerConfigVerbose.setValue(Boolean.FALSE);
     }
 
-    public Profile toProfile() {
+    @Override
+    public Profile toDomain() {
 
         Profile p = new Profile( profileName.get() );
 
@@ -106,7 +111,8 @@ public class ActiveProfile {
         return p;
     }
 
-    public void loadFromProfile(Profile p) {
+    @Override
+    public void fromDomain(Profile p) {
 
         profileName.set( p.getProfileName() );
 

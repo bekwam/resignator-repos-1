@@ -101,6 +101,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @Inject
     Provider<JarsignerConfigController> jarsignerConfigControllerProvider;
     
+    @Inject
+    ActiveProfile activeProfile;
+
     private StringProperty activeProfileName = new SimpleStringProperty("");  // a "hidden" field
     private String jarDir = System.getProperty("user.home");
 
@@ -110,9 +113,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         try {
             configurationDS.loadConfiguration();
 
-            activeProfileName.bindBidirectional(configurationDS.getActiveProfile().profileNameProperty());
-            tfSourceFile.textProperty().bindBidirectional(configurationDS.getActiveProfile().sourceFileFileNameProperty());
-            tfTargetFile.textProperty().bindBidirectional( configurationDS.getActiveProfile().targetFileFileNameProperty() );
+            activeProfileName.bindBidirectional(activeProfile.profileNameProperty());
+            tfSourceFile.textProperty().bindBidirectional(activeProfile.sourceFileFileNameProperty());
+            tfTargetFile.textProperty().bindBidirectional(activeProfile.targetFileFileNameProperty() );
 
         } catch(Exception exc) {
 
@@ -195,7 +198,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             logger.debug("[LOAD PROFILE]");
         }
 
-        configurationDS.getActiveProfile().reset();
+        activeProfile.reset();
 
         Stage s = (Stage) sp.getScene().getWindow();
         s.setTitle("ResignatorApp");
@@ -464,8 +467,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     public void sign() {
         if( logger.isDebugEnabled() ) {
             logger.debug("[SIGN] activeProfile sourceFile={}, targetFile={}",
-                    configurationDS.getActiveProfile().getSourceFileFileName(),
-                    configurationDS.getActiveProfile().getTargetFileFileName() );
+                    activeProfile.getSourceFileFileName(),
+                    activeProfile.getTargetFileFileName() );
         }
     }
 

@@ -78,14 +78,11 @@ public class JarsignerConfigController extends GuiceBaseView {
 	private Label lblConfStorepass;
 
 	@Inject
-	private ConfigurationDataSource configurationDS;
+	protected ConfigurationDataSource configurationDS;
 
-	public void JarsignerConfigController() {
-		if( logger.isDebugEnabled() ) {
-			logger.debug("[CONSTRUCTOR]");
-		}
-	}
-
+	@Inject
+	protected ActiveProfile activeProfile;
+	
 	@FXML
 	public void initialize() {
 		
@@ -95,11 +92,11 @@ public class JarsignerConfigController extends GuiceBaseView {
 		
 		cbVerbose.getItems().addAll(Boolean.TRUE, Boolean.FALSE);
 
-		tfAlias.textProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigAliasProperty());
-		pfStorepass.textProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigStorepassProperty());
-		tfKeystore.textProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigKeystoreProperty());
-		pfKeypass.textProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigKeypassProperty());
-		cbVerbose.valueProperty().bindBidirectional(configurationDS.getActiveProfile().jarsignerConfigVerboseProperty());
+		tfAlias.textProperty().bindBidirectional(activeProfile.jarsignerConfigAliasProperty());
+		pfStorepass.textProperty().bindBidirectional(activeProfile.jarsignerConfigStorepassProperty());
+		tfKeystore.textProperty().bindBidirectional(activeProfile.jarsignerConfigKeystoreProperty());
+		pfKeypass.textProperty().bindBidirectional(activeProfile.jarsignerConfigKeypassProperty());
+		cbVerbose.valueProperty().bindBidirectional(activeProfile.jarsignerConfigVerboseProperty());
 
 		lblConfKeypass.setVisible(false);
 		lblConfStorepass.setVisible( false );

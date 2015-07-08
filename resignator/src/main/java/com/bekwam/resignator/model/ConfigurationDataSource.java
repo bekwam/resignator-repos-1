@@ -3,8 +3,6 @@ package com.bekwam.resignator.model;
 import java.io.IOException;
 import java.util.List;
 
-import com.bekwam.resignator.ActiveProfile;
-
 /**
  * Main DAO for access all settings / preferences info in the app
  *
@@ -63,16 +61,8 @@ public interface ConfigurationDataSource {
     void saveConfiguration() throws IOException;
 
     /**
-     * Returns the FX object ActiveProfile
-     *
-     * @return
+     * Returns the backing datastore Configuration object
+     * 
      */
-    ActiveProfile getActiveProfile();
-
-    /**
-     * Sets the jarsignerExec property
-     *
-     */
-    void setJarsignerExec(String jarsignerExec);
-
+    Configuration getConfiguration();
 }

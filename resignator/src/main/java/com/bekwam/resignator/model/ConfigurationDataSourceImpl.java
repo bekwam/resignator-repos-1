@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bekwam.jfxbop.data.BaseManagedDataSource;
+import com.bekwam.resignator.ActiveConfiguration;
 import com.bekwam.resignator.ActiveProfile;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -56,8 +57,12 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     @Inject @Named("ConfigDir")
     String configDir;
 
-    private final ActiveProfile activeProfile = new ActiveProfile();
-
+    @Inject
+    ActiveConfiguration activeConf;
+    
+    @Inject
+    ActiveProfile activeProfile;
+    
     private Optional<Configuration> configuration = Optional.empty();
     private Optional<File> configFile = Optional.empty();
 
@@ -93,7 +98,7 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
                     filter( p -> StringUtils.equalsIgnoreCase(p.getProfileName(), profileName) ).
                     findFirst();
 
-        activeProfile.loadFromProfile( profile.get() );
+        activeProfile.fromDomain( profile.get() );
     }
 
     @Override
@@ -113,18 +118,15 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
         //
         // Add a new or replacing profile
         //
-        configuration.get().getProfiles().add( activeProfile.toProfile() );
+        configuration.get().getProfiles().add( activeProfile.toDomain() );
 
-        //
-        // Mark this Profile as activeProfile
-        //
-        configuration.get().setActiveProfile(Optional.of( activeProfile.getProfileName() ));
+        activeConf.setActiveProfile( activeProfile.getProfileName() );
 
         //
         // Verify that Profile is in recentProfiles
         //
-        if( !configuration.get().getRecentProfiles().contains( activeProfile.getProfileName() ) ) {
-            configuration.get().getRecentProfiles().add(  activeProfile.getProfileName() );
+        if( !activeConf.getRecentProfiles().contains(activeProfile.getProfileName()) ) {
+        	activeConf.getRecentProfiles().add( activeProfile.getProfileName() );
         }
 
         saveConfiguration();
@@ -156,11 +158,26 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
         Configuration cfg = gson.fromJson(new FileReader(cf), Configuration.class);
 
         configuration = Optional.of(cfg);
+        activeConf.fromDomain(configuration.get());
     }
 
     @Override
     public void saveConfiguration() throws IOException {
 
+    	Preconditions.checkArgument( configuration.isPresent() );
+    	
+    	Configuration c = configuration.get();
+    	
+    	//
+    	// Merges ActiveConfiguration which doesn't include any Profiles with the latest
+    	// Configuration object
+    	//
+    	
+    	c.setActiveProfile(Optional.of(activeConf.getActiveProfile()));
+    	c.setJarsignerExecutable(Optional.of(activeConf.getJarsignerExecutable()));
+    	c.getRecentProfiles().clear();
+    	c.getRecentProfiles().addAll( activeConf.getRecentProfiles() );
+    	
         Gson gson = new GsonBuilder().
                 registerTypeAdapter(Configuration.class, new ConfigurationJSONAdapter()).
                 setPrettyPrinting().
@@ -220,10 +237,6 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
         }
     }
 
-    public ActiveProfile getActiveProfile() { return activeProfile; }
-
     @Override
-    public void setJarsignerExec(String jarsignerExec) {
-        configuration.get().setJarsignerExecutable( Optional.of(jarsignerExec) );
-    }
+    public Configuration getConfiguration() { return configuration.get(); }
 }

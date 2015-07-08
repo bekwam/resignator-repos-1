@@ -17,28 +17,29 @@ package com.bekwam.resignator;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.bekwam.jfxbop.view.Viewable;
+import com.bekwam.resignator.model.Configuration;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
-import javafx.util.converter.DefaultStringConverter;
 
 /**
  * Captures application-wide settings
@@ -61,16 +62,23 @@ public class SettingsController extends GuiceBaseView {
     @Inject
     ConfigurationDataSource configurationDS;
 
-    private StringProperty jarsignerExec = new SimpleStringProperty("");  // a "hidden" field
-
+    @Inject
+    ActiveConfiguration activeConfiguration;
+    
     private String jarsignerDir = System.getProperty("java.home");
+    private boolean dirtyFlag = false;
     
     @FXML
     public void initialize() {
+    	
         if( logger.isDebugEnabled() ){
             logger.debug("[INIT]");
         }
-        tfJarsignerExec.textProperty().bindBidirectional(jarsignerExec, new DefaultStringConverter());
+        tfJarsignerExec.textProperty().bindBidirectional(activeConfiguration.jarsignerExecutableProperty());
+        
+        tfJarsignerExec.textProperty().addListener(evt -> {
+        	dirtyFlag = true;
+        });
     }
 
     @FXML
@@ -81,6 +89,7 @@ public class SettingsController extends GuiceBaseView {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select jarsigner.exe");
+        fileChooser.setInitialDirectory(new File(jarsignerDir));
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("EXE", "*.exe")
         );
@@ -91,19 +100,31 @@ public class SettingsController extends GuiceBaseView {
                 logger.debug("[BROWSE] selected file={}", f.getAbsolutePath());
             }
             tfJarsignerExec.setText(f.getAbsolutePath());
+            
+            jarsignerDir = FilenameUtils.getFullPath(f.getAbsolutePath());
         }
     }
 
     @FXML
-    public void save() {
+    public void save(ActionEvent evt) {
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[SAVE] saving configuration; jarsignerExec={}", jarsignerExec.getValue());
+            logger.debug("[SAVE] saving configuration; jarsignerExec={}", activeConfiguration.jarsignerExecutableProperty());
         }
 
         try {
-            configurationDS.setJarsignerExec(jarsignerExec.get());
             configurationDS.saveConfiguration();
+            
+            Scene scene = ((Button)evt.getSource()).getScene();
+            if( scene != null ) {
+                Window w = scene.getWindow();
+                if (w != null) {
+                    w.hide();
+                }
+            }
+
+            dirtyFlag = false;
+            
         } catch(IOException exc) {
 
             logger.error("error saving or setting jarsignerexec, exc");
@@ -121,17 +142,40 @@ public class SettingsController extends GuiceBaseView {
     @FXML
     public void cancel(ActionEvent evt) {
 
-        //
-        // For some reason, this.getScene() which is on the fx:root returns null
-        //
+    	if( dirtyFlag ) {
+            
+    		Alert alert = new Alert(
+                    Alert.AlertType.CONFIRMATION,
+                    "Form has been modified");
+            alert.setHeaderText("Discard edits?");
+            
+            Optional<ButtonType> response = alert.showAndWait();
 
-        Scene scene = ((Button)evt.getSource()).getScene();
-        if( scene != null ) {
-            Window w = scene.getWindow();
-            if (w != null) {
-                w.hide();
+            if( response.isPresent() && response.get() == ButtonType.OK ) {
+            	
+            	Configuration savedConf = configurationDS.getConfiguration();
+
+            	if( logger.isDebugEnabled() ) {
+            		logger.debug("[CANCEL] reverting configuration ac jse={} to sc jse={}", 
+            				activeConfiguration.getJarsignerExecutable(),
+            				savedConf.getJarsignerExecutable().get());
+            	}
+            	
+            	activeConfiguration.setJarsignerExecutable( savedConf.getJarsignerExecutable().get() );
+            	
+            	dirtyFlag = false;
+            	
+            } else {
+            	return;  // dirtyFlag continues to be true
             }
-        }
-    }
+    	}
 
+   		Scene scene = ((Button)evt.getSource()).getScene();
+   		if( scene != null ) {
+   			Window w = scene.getWindow();
+   			if (w != null) {
+   				w.hide();
+   			}
+   		}
+    }
 }
