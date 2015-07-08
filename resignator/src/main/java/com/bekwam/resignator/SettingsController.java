@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +35,11 @@ import com.bekwam.resignator.model.ConfigurationDataSource;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -59,6 +62,12 @@ public class SettingsController extends GuiceBaseView {
     @FXML
     TextField tfJarsignerExec;
 
+    @FXML
+    ProgressIndicator piSettings;
+    
+    @FXML
+    Label lblErrJarsignerExec;
+    
     @Inject
     ConfigurationDataSource configurationDS;
 
@@ -78,7 +87,11 @@ public class SettingsController extends GuiceBaseView {
         
         tfJarsignerExec.textProperty().addListener(evt -> {
         	dirtyFlag = true;
+        	lblErrJarsignerExec.setVisible(false);
         });
+        
+        piSettings.setVisible(false);
+        lblErrJarsignerExec.setVisible(false);
     }
 
     @FXML
@@ -90,10 +103,13 @@ public class SettingsController extends GuiceBaseView {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select jarsigner.exe");
         fileChooser.setInitialDirectory(new File(jarsignerDir));
-        fileChooser.getExtensionFilters().addAll(
+        
+        if( SystemUtils.IS_OS_WINDOWS ) {
+        	fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("EXE", "*.exe")
-        );
-
+        			);
+        }
+        
         File f = fileChooser.showOpenDialog(stage);
         if( f != null ) {
             if( logger.isDebugEnabled() ) {
@@ -113,16 +129,31 @@ public class SettingsController extends GuiceBaseView {
         }
 
         try {
-            configurationDS.saveConfiguration();
-            
-            Scene scene = ((Button)evt.getSource()).getScene();
-            if( scene != null ) {
-                Window w = scene.getWindow();
-                if (w != null) {
-                    w.hide();
-                }
-            }
+        	piSettings.setProgress(0.0d);
+        	piSettings.setVisible(true);
+        	
+        	piSettings.setProgress(0.3d);
 
+        	if( validateJarsignerExec(activeConfiguration.getJarsignerExecutable() ) ) {
+            	piSettings.setProgress(0.6d);
+        		configurationDS.saveConfiguration();
+            	piSettings.setProgress(1.0d);
+            	
+                Scene scene = ((Button)evt.getSource()).getScene();
+                if( scene != null ) {
+                    Window w = scene.getWindow();
+                    if (w != null) {
+                        w.hide();
+                    }
+                }
+
+
+        	} else {
+        		// report error
+        		lblErrJarsignerExec.setVisible(true);
+        	}
+        	
+            piSettings.setVisible(false);            
             dirtyFlag = false;
             
         } catch(IOException exc) {
@@ -177,5 +208,27 @@ public class SettingsController extends GuiceBaseView {
    				w.hide();
    			}
    		}
+    }
+    
+    private boolean validateJarsignerExec(String jarsignerExec) {
+    	try {
+    		if( logger.isDebugEnabled() ) {
+    			logger.debug("[VAL JARSIGNER] jarsignerExec={}", jarsignerExec);
+    		}
+    		
+    		Process p = Runtime.getRuntime().exec( jarsignerExec );
+    		
+    		int exitValue = p.waitFor();
+    		
+    		if( logger.isDebugEnabled() ) {
+    			logger.debug("[VAL JARSIGNER] retval={}", exitValue);
+    		}
+
+    		return exitValue == 0;
+    		
+    	} catch(IOException | InterruptedException exc) {
+    		logger.error( "error running '{" + jarsignerExec + "}'", exc);
+    		return false;
+    	}    	
     }
 }

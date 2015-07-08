@@ -41,8 +41,6 @@ import com.bekwam.resignator.model.Profile;
 
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -102,9 +100,11 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     Provider<JarsignerConfigController> jarsignerConfigControllerProvider;
     
     @Inject
+    ActiveConfiguration activeConfiguration;
+    
+    @Inject
     ActiveProfile activeProfile;
 
-    private StringProperty activeProfileName = new SimpleStringProperty("");  // a "hidden" field
     private String jarDir = System.getProperty("user.home");
 
     @FXML
@@ -113,7 +113,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         try {
             configurationDS.loadConfiguration();
 
-            activeProfileName.bindBidirectional(activeProfile.profileNameProperty());
+            activeConfiguration.activeProfileProperty().bindBidirectional(activeProfile.profileNameProperty());
             tfSourceFile.textProperty().bindBidirectional(activeProfile.sourceFileFileNameProperty());
             tfTargetFile.textProperty().bindBidirectional(activeProfile.targetFileFileNameProperty() );
 
@@ -248,8 +248,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         //
         // Prompt user for selection - default is first item
         //
-        if( StringUtils.isNotEmpty(activeProfileName.getValue()) ) {
-            defaultProfileName = activeProfileName.getValue();
+        if( StringUtils.isNotEmpty(activeConfiguration.activeProfileProperty().getValue()) ) {
+            defaultProfileName = activeConfiguration.activeProfileProperty().getValue();
         }
 
         if( logger.isDebugEnabled() ) {
@@ -283,7 +283,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             logger.debug("[SAVE PROFILE]");
         }
 
-        if( activeProfileName.isEmpty().get() ) {
+        if( activeConfiguration.activeProfileProperty().isEmpty().get() ) {
 
             if( logger.isDebugEnabled() ){
                 logger.debug("[SAVE PROFILE] activeProfileName is empty");
@@ -295,7 +295,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             Optional<String> result = dialog.showAndWait();
 
             if( result.isPresent() ) {
-                activeProfileName.set(result.get());
+            	activeConfiguration.activeProfileProperty().set(result.get());
 
                 try {
                     configurationDS.saveProfile();  // saves active profile
@@ -329,7 +329,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             try {
                 configurationDS.saveProfile();  // saves active profile
             } catch(IOException exc) {
-                logger.error( "error saving profile '" + activeProfileName.get() + "'", exc );
+                logger.error( "error saving profile '" + activeConfiguration.activeProfileProperty().get() + "'", exc );
 
                 Alert alert = new Alert(
                         Alert.AlertType.ERROR,
@@ -371,7 +371,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 }
             }
 
-            activeProfileName.set(result.get());  // activeProfile object tweaked w. new name
+            activeConfiguration.activeProfileProperty().set(result.get());  // activeProfile object tweaked w. new name
 
             try {
                 configurationDS.saveProfile();

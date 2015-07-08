@@ -14,3 +14,8 @@
     -fx-padding: 0.3333em 0.75em 0.3333em 0.75em; /* 4 9 4 9 */
 
 }
+
+.error {
+	-fx-text-fill: red;
+}
+
