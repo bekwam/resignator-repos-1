@@ -66,17 +66,24 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
             jarsignerExecutable = jeElement.getAsString();
         }
 
+        JsonElement keElement = obj.get("keytoolExecutable");
+        String keytoolExecutable = "";
+        if( keElement != null ) {
+            keytoolExecutable = keElement.getAsString();
+
+        }
         JsonArray recentProfiles = obj.getAsJsonArray("recentProfiles");
         JsonArray profiles = obj.getAsJsonArray("profiles");
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[DESERIALIZE] rp={}, ap={}, jarsigner={}, profiles={}",
-                    recentProfiles.toString(), ap, jarsignerExecutable,  profiles.toString());
+            logger.debug("[DESERIALIZE] rp={}, ap={}, jarsigner={}, keytool={}, profiles={}",
+                    recentProfiles.toString(), ap, jarsignerExecutable,  keytoolExecutable, profiles.toString());
         }
 
         Configuration conf = new Configuration();
         conf.setActiveProfile(Optional.of(ap));
         conf.setJarsignerExecutable(Optional.of(jarsignerExecutable));
+        conf.setKeytoolExecutable(Optional.of(keytoolExecutable));
         conf.getRecentProfiles().addAll( deserializeRecentProfiles(recentProfiles) );
         conf.getProfiles().addAll( deserializeProfiles(profiles) );
 
@@ -182,14 +189,16 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
 
         String ap = configuration.getActiveProfile().orElse("");
         String jarsignerExecutable = configuration.getJarsignerExecutable().orElse("");
+        String keytoolExecutable = configuration.getKeytoolExecutable().orElse("");
         JsonArray profiles = serializeProfiles( configuration.getProfiles() );
 
         JsonObject root = new JsonObject();
         root.addProperty("activeProfile", ap );
         root.addProperty("jarsignerExecutable", jarsignerExecutable);
+        root.addProperty("keytoolExecutable", keytoolExecutable);
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[SERIALIZE] ap={}, jarsignerExecutable={}", ap, jarsignerExecutable);
+            logger.debug("[SERIALIZE] ap={}, jarsignerExecutable={}, ke={}", ap, jarsignerExecutable, keytoolExecutable);
         }
 
         root.add( "recentProfiles", serializeRecentProfiles(configuration.getRecentProfiles()) );

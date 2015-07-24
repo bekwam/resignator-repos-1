@@ -175,6 +175,7 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     	
     	c.setActiveProfile(Optional.of(activeConf.getActiveProfile()));
     	c.setJarsignerExecutable(Optional.of(activeConf.getJarsignerExecutable()));
+        c.setKeytoolExecutable(Optional.of(activeConf.getKeytoolExecutable()));
     	c.getRecentProfiles().clear();
     	c.getRecentProfiles().addAll( activeConf.getRecentProfiles() );
     	

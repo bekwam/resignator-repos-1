@@ -63,11 +63,17 @@ public class SettingsController extends GuiceBaseView {
     TextField tfJarsignerExec;
 
     @FXML
+    TextField tfKeytoolExec;
+
+    @FXML
     ProgressIndicator piSettings;
     
     @FXML
     Label lblErrJarsignerExec;
-    
+
+    @FXML
+    Label lblErrKeytoolExec;
+
     @Inject
     ConfigurationDataSource configurationDS;
 
@@ -75,6 +81,7 @@ public class SettingsController extends GuiceBaseView {
     ActiveConfiguration activeConfiguration;
     
     private String jarsignerDir = System.getProperty("java.home");
+    private String keytoolDir = System.getProperty("java.home");
     private boolean dirtyFlag = false;
     
     @FXML
@@ -84,20 +91,23 @@ public class SettingsController extends GuiceBaseView {
             logger.debug("[INIT]");
         }
         tfJarsignerExec.textProperty().bindBidirectional(activeConfiguration.jarsignerExecutableProperty());
-        
+        tfKeytoolExec.textProperty().bindBidirectional(activeConfiguration.keytoolExecutableProperty());
+
         tfJarsignerExec.textProperty().addListener(evt -> {
         	dirtyFlag = true;
         	lblErrJarsignerExec.setVisible(false);
+            lblErrKeytoolExec.setVisible(false);
         });
         
         piSettings.setVisible(false);
         lblErrJarsignerExec.setVisible(false);
+        lblErrKeytoolExec.setVisible(false);
     }
 
     @FXML
-    public void browse() {
+    public void browseForJarsigner() {
         if( logger.isDebugEnabled() ){
-            logger.debug("[BROWSE]");
+            logger.debug("[BROWSE FOR JARSIGNER]");
         }
 
         FileChooser fileChooser = new FileChooser();
@@ -113,11 +123,38 @@ public class SettingsController extends GuiceBaseView {
         File f = fileChooser.showOpenDialog(stage);
         if( f != null ) {
             if( logger.isDebugEnabled() ) {
-                logger.debug("[BROWSE] selected file={}", f.getAbsolutePath());
+                logger.debug("[BROWSE FOR JARSIGNER] selected file={}", f.getAbsolutePath());
             }
             tfJarsignerExec.setText(f.getAbsolutePath());
             
             jarsignerDir = FilenameUtils.getFullPath(f.getAbsolutePath());
+        }
+    }
+
+    @FXML
+    public void browseForKeytool() {
+        if( logger.isDebugEnabled() ){
+            logger.debug("[BROWSE FOR KEYTOOL]");
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select keytool.exe");
+        fileChooser.setInitialDirectory(new File(keytoolDir));
+
+        if( SystemUtils.IS_OS_WINDOWS ) {
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("EXE", "*.exe")
+            );
+        }
+
+        File f = fileChooser.showOpenDialog(stage);
+        if( f != null ) {
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[BROWSE FOR KEYTOOL] selected file={}", f.getAbsolutePath());
+            }
+            tfKeytoolExec.setText(f.getAbsolutePath());
+
+            keytoolDir = FilenameUtils.getFullPath(f.getAbsolutePath());
         }
     }
 
@@ -135,10 +172,22 @@ public class SettingsController extends GuiceBaseView {
         	piSettings.setProgress(0.3d);
 
         	if( validateJarsignerExec(activeConfiguration.getJarsignerExecutable() ) ) {
-            	piSettings.setProgress(0.6d);
+            	piSettings.setProgress(0.4d);
         		configurationDS.saveConfiguration();
-            	piSettings.setProgress(1.0d);
+            	piSettings.setProgress(0.6d);
             	
+        	} else {
+        		// report error
+        		lblErrJarsignerExec.setVisible(true);
+
+                // still dirty
+        	}
+
+            if( validateKeytoolExec(activeConfiguration.getKeytoolExecutable()) ) {
+                piSettings.setProgress(0.7d);
+                configurationDS.saveConfiguration();
+                piSettings.setProgress(1.0d);
+
                 Scene scene = ((Button)evt.getSource()).getScene();
                 if( scene != null ) {
                     Window w = scene.getWindow();
@@ -147,15 +196,17 @@ public class SettingsController extends GuiceBaseView {
                     }
                 }
 
+                dirtyFlag = false;
 
-        	} else {
-        		// report error
-        		lblErrJarsignerExec.setVisible(true);
-        	}
-        	
+            } else {
+                // report error
+                lblErrKeytoolExec.setVisible(true);
+
+                // still dirty
+            }
+
             piSettings.setVisible(false);            
-            dirtyFlag = false;
-            
+
         } catch(IOException exc) {
 
             logger.error("error saving or setting jarsignerexec, exc");
@@ -190,10 +241,14 @@ public class SettingsController extends GuiceBaseView {
             		logger.debug("[CANCEL] reverting configuration ac jse={} to sc jse={}", 
             				activeConfiguration.getJarsignerExecutable(),
             				savedConf.getJarsignerExecutable().get());
-            	}
-            	
-            	activeConfiguration.setJarsignerExecutable( savedConf.getJarsignerExecutable().get() );
-            	
+                    logger.debug("[CANCEL] reverting configuration ac ke={} to sc ke={}",
+                            activeConfiguration.getKeytoolExecutable(),
+                            savedConf.getKeytoolExecutable().get());
+                }
+
+                activeConfiguration.setJarsignerExecutable( savedConf.getJarsignerExecutable().get() );
+                activeConfiguration.setKeytoolExecutable( savedConf.getKeytoolExecutable().get() );
+
             	dirtyFlag = false;
             	
             } else {
@@ -230,5 +285,27 @@ public class SettingsController extends GuiceBaseView {
     		logger.error( "error running '{" + jarsignerExec + "}'", exc);
     		return false;
     	}    	
+    }
+
+    private boolean validateKeytoolExec(String keytoolExec) {
+        try {
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[VAL KEYTOOL] jarsignerExec={}", keytoolExec);
+            }
+
+            Process p = Runtime.getRuntime().exec( keytoolExec );
+
+            int exitValue = p.waitFor();
+
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[VAL KEYTOOL] retval={}", exitValue);
+            }
+
+            return exitValue == 0;
+
+        } catch(IOException | InterruptedException exc) {
+            logger.error( "error running '{" + keytoolExec + "}'", exc);
+            return false;
+        }
     }
 }

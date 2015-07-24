@@ -35,6 +35,7 @@ import javafx.collections.FXCollections;
 public class ActiveConfiguration implements ActiveRecord<Configuration> {
 
 	private final StringProperty jarsignerExecutable = new SimpleStringProperty("");
+	private final StringProperty keytoolExecutable = new SimpleStringProperty("");
 	private final StringProperty activeProfile = new SimpleStringProperty("");
 	private final ListProperty<String> recentProfiles = new SimpleListProperty<String>();
 	
@@ -42,7 +43,10 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 	public void setJarsignerExecutable(String je) {
 		jarsignerExecutable.set(je);
 	}
-	
+
+	public String getKeytoolExecutable() { return keytoolExecutable.get(); }
+	public void setKeytoolExecutable(String ke) { keytoolExecutable.set(ke); }
+
 	public String getActiveProfile() { return activeProfile.get(); }
 	public void setActiveProfile(String ap) {
 		activeProfile.set(ap);
@@ -55,21 +59,25 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 	}
 	
 	public StringProperty jarsignerExecutableProperty() { return jarsignerExecutable; }
+	public StringProperty keytoolExecutableProperty() { return keytoolExecutable; }
 	public StringProperty activeProfileProperty() { return activeProfile; }
 	public ListProperty<String> recentProfilesProperty() { return recentProfiles; }
 	
 	@Override
 	public String toString() {
-		return "ActiveConfiguration [jarsignerExecutable=" + jarsignerExecutable + ", activeProfile=" + activeProfile
+		return "ActiveConfiguration [jarsignerExecutable=" + jarsignerExecutable + ", keytoolExecutable="
+				+ keytoolExecutable + ", activeProfile=" + activeProfile
 				+ ", recentProfiles=" + recentProfiles + "]";
 	}	
 	
 	@Override
 	public void reset() {
 		jarsignerExecutable.set("");
+		keytoolExecutable.set("");
 		activeProfile.set("");
 		recentProfiles.clear();
 	}
+
 	@Override
 	public Configuration toDomain() {
 		// TODO Auto-generated method stub
@@ -79,6 +87,7 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 	public void fromDomain(Configuration domain) {
 
 		jarsignerExecutable.setValue( domain.getJarsignerExecutable().orElse("") );
+		keytoolExecutable.setValue( domain.getKeytoolExecutable().orElse("") );
 		activeProfile.setValue( domain.getActiveProfile().orElse("") );		
 		recentProfiles.setValue( FXCollections.observableList(domain.getRecentProfiles()) );
 	}

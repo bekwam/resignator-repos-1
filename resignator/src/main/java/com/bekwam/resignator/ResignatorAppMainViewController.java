@@ -28,6 +28,8 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -43,14 +45,6 @@ import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ChoiceDialog;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -487,14 +481,42 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     
     @FXML
     public void openJarsignerConfig() {
-    	JarsignerConfigController jarsignerConfigView = jarsignerConfigControllerProvider.get();
-    	try {
-    		jarsignerConfigView.show();
-        } catch(Exception exc) {
-            String msg = "Error launching jarsigner config";
-            logger.error( msg, exc );
-            Alert alert = new Alert(Alert.AlertType.ERROR, msg);
+
+        if( StringUtils.isNotEmpty(activeConfiguration.getKeytoolExecutable()) ) {
+
+            JarsignerConfigController jarsignerConfigView = jarsignerConfigControllerProvider.get();
+            try {
+                jarsignerConfigView.show();
+            } catch (Exception exc) {
+                String msg = "Error launching jarsigner config";
+                logger.error(msg, exc);
+                Alert alert = new Alert(Alert.AlertType.ERROR, msg);
+                alert.showAndWait();
+            }
+        } else {
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[OPEN JARSIGNER CONFIG] keytool.exe not set");
+            }
+
+            Alert alert = new Alert(
+                    Alert.AlertType.ERROR,
+                    "Set keytool.exe in File > Settings");
+            alert.setHeaderText("Keytool not defined");
+
+            FlowPane fp = new FlowPane();
+            Label lbl = new Label("Set keytool in ");
+            Hyperlink link = new Hyperlink("File > Settings");
+            fp.getChildren().addAll( lbl, link);
+
+            link.setOnAction( (evt) -> {
+                alert.close();
+                openSettings();
+            } );
+
+            alert.getDialogPane().contentProperty().set( fp );
+
             alert.showAndWait();
+
         }
     }
     

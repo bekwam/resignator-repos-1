@@ -5,7 +5,7 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bekwam.resignator.JarsignerConfigController">
+<VBox fx:id="vbox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bekwam.resignator.JarsignerConfigController">
    <children>
       <GridPane hgap="10.0" vgap="4.0">
         <columnConstraints>
@@ -13,13 +13,13 @@
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="40.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
         </columnConstraints>
         <rowConstraints>
           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
@@ -28,17 +28,17 @@
                   <Insets right="4.0" />
                </GridPane.margin>
             </Label>
-            <Label text="Keypass" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+            <Label text="Keypass" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
                <GridPane.margin>
                   <Insets right="4.0" />
                </GridPane.margin>
             </Label>
-            <Label text="Storepass" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+            <Label text="Storepass" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets right="4.0" />
                </GridPane.margin>
             </Label>
-            <Label text="Alias" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
+            <Label text="Alias" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
                <GridPane.margin>
                   <Insets right="4.0" />
                </GridPane.margin>
@@ -48,17 +48,37 @@
                   <Insets right="4.0" />
                </GridPane.margin>
             </Label>
-            <TextField fx:id="tfKeystore" GridPane.columnIndex="1" />
-            <TextField fx:id="tfAlias" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <TextField fx:id="tfKeystore" onAction="#validateKeystore" GridPane.columnIndex="1" GridPane.columnSpan="2" />
+            <HBox alignment="CENTER_LEFT" GridPane.columnIndex="3">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#browse" text="Browse" GridPane.columnIndex="3" />
+                  <Label fx:id="lblKeystoreNotFound" style="-fx-text-fill: red;" text="Not found">
+                     <HBox.margin>
+                        <Insets left="4.0" />
+                     </HBox.margin>
+                  </Label>
+               </children>
+            </HBox>
+            <PasswordField fx:id="pfStorepass" onAction="#resetConfStorepass" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <PasswordField fx:id="pfConfStorepass" onAction="#verifyStorepass" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+            <ChoiceBox fx:id="cbAlias" disable="true" prefWidth="200.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" />
+            <PasswordField fx:id="pfKeypass" onAction="#resetConfKeypass" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <PasswordField fx:id="pfConfKeypass" onAction="#verifyKeypass" GridPane.columnIndex="3" GridPane.rowIndex="3" />
             <ChoiceBox fx:id="cbVerbose" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-            <Label text="Confirm Keypass" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-            <Label text="Confirm Storepass" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-            <PasswordField fx:id="pfConfKeypass" onAction="#verifyKeypass" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-            <PasswordField fx:id="pfConfStorepass" onAction="#verifyStorepass" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-            <PasswordField fx:id="pfKeypass" onAction="#resetConfKeypass" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <PasswordField fx:id="pfStorepass" onAction="#resetConfStorepass" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Label fx:id="lblConfKeypass" text="Ok" GridPane.columnIndex="4" GridPane.rowIndex="1" />
-            <Label fx:id="lblConfStorepass" text="Ok" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+            <Label text="Confirm Keypass" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+            <Label text="Confirm Storepass" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+            <Label fx:id="lblConfKeypass" text="Ok" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+            <Label fx:id="lblConfStorepass" text="Ok" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+            <HBox fx:id="hboxAliasProgress" alignment="CENTER_LEFT" visible="false" GridPane.columnIndex="3" GridPane.rowIndex="2">
+               <children>
+                  <ProgressBar fx:id="pbAlias" progress="0.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                  <Label fx:id="lblAliasProgress">
+                     <HBox.margin>
+                        <Insets left="4.0" />
+                     </HBox.margin>
+                  </Label>
+               </children>
+            </HBox>
          </children>
          <padding>
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

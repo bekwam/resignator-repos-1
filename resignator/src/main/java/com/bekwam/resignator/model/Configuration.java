@@ -25,6 +25,7 @@ import java.util.Optional;
 public class Configuration {
 
     private Optional<String> jarsignerExecutable = Optional.empty();
+    private Optional<String> keytoolExectutable = Optional.empty();
     private Optional<String> activeProfile = Optional.empty();
     private final List<String> recentProfiles = new ArrayList<>();
     private final List<Profile> profiles = new ArrayList<>();
@@ -33,6 +34,12 @@ public class Configuration {
 
     public void setJarsignerExecutable(Optional<String> jarsignerExecutable) {
         this.jarsignerExecutable = jarsignerExecutable;
+    }
+
+    public Optional<String> getKeytoolExecutable() { return keytoolExectutable; }
+
+    public void setKeytoolExecutable(Optional<String> keytoolExecutable) {
+        this.keytoolExectutable = keytoolExecutable;
     }
 
     public Optional<String> getActiveProfile() {
@@ -55,6 +62,7 @@ public class Configuration {
     public String toString() {
         return "Configuration{" +
                 "jarsignerExecutable=" + jarsignerExecutable +
+                "keytoolExecutable=" + keytoolExectutable +
                 ", activeProfile=" + activeProfile +
                 ", recentProfiles=" + recentProfiles +
                 ", profiles=" + profiles +
