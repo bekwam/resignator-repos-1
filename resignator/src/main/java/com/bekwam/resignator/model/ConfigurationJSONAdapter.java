@@ -15,23 +15,14 @@
  */
 package com.bekwam.resignator.model;
 
+import com.google.gson.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 
 /**
  * Converts JSON to and from the Configuration domain object
@@ -60,30 +51,23 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
             ap = apElement.getAsString();
         }
 
-        JsonElement jeElement = obj.get("jarsignerExecutable");
-        String jarsignerExecutable = "";
-        if( jeElement != null ) {
-            jarsignerExecutable = jeElement.getAsString();
+        JsonElement jdkElem = obj.get("jdkHome");
+        String jdkHome = "";
+        if( jdkElem != null ) {
+            jdkHome = jdkElem.getAsString();
         }
 
-        JsonElement keElement = obj.get("keytoolExecutable");
-        String keytoolExecutable = "";
-        if( keElement != null ) {
-            keytoolExecutable = keElement.getAsString();
-
-        }
         JsonArray recentProfiles = obj.getAsJsonArray("recentProfiles");
         JsonArray profiles = obj.getAsJsonArray("profiles");
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[DESERIALIZE] rp={}, ap={}, jarsigner={}, keytool={}, profiles={}",
-                    recentProfiles.toString(), ap, jarsignerExecutable,  keytoolExecutable, profiles.toString());
+            logger.debug("[DESERIALIZE] rp={}, ap={}, jdkHome={}, keytool={}, profiles={}",
+                    recentProfiles.toString(), ap, jdkHome,  profiles.toString());
         }
 
         Configuration conf = new Configuration();
         conf.setActiveProfile(Optional.of(ap));
-        conf.setJarsignerExecutable(Optional.of(jarsignerExecutable));
-        conf.setKeytoolExecutable(Optional.of(keytoolExecutable));
+        conf.setJDKHome(Optional.of(jdkHome));
         conf.getRecentProfiles().addAll( deserializeRecentProfiles(recentProfiles) );
         conf.getProfiles().addAll( deserializeProfiles(profiles) );
 
@@ -188,17 +172,15 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
         }
 
         String ap = configuration.getActiveProfile().orElse("");
-        String jarsignerExecutable = configuration.getJarsignerExecutable().orElse("");
-        String keytoolExecutable = configuration.getKeytoolExecutable().orElse("");
+        String jdkHome = configuration.getJDKHome().orElse("");
         JsonArray profiles = serializeProfiles( configuration.getProfiles() );
 
         JsonObject root = new JsonObject();
         root.addProperty("activeProfile", ap );
-        root.addProperty("jarsignerExecutable", jarsignerExecutable);
-        root.addProperty("keytoolExecutable", keytoolExecutable);
+        root.addProperty("jdkHome", jdkHome);
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[SERIALIZE] ap={}, jarsignerExecutable={}, ke={}", ap, jarsignerExecutable, keytoolExecutable);
+            logger.debug("[SERIALIZE] ap={}, jdkHome={}", ap, jdkHome);
         }
 
         root.add( "recentProfiles", serializeRecentProfiles(configuration.getRecentProfiles()) );

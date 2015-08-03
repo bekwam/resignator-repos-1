@@ -15,40 +15,37 @@
  */
 package com.bekwam.resignator;
 
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-
+import com.bekwam.jfxbop.guice.GuiceBaseView;
+import com.bekwam.jfxbop.view.Viewable;
+import com.bekwam.resignator.model.ConfigurationDataSource;
+import com.bekwam.resignator.model.Profile;
+import javafx.animation.FadeTransition;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bekwam.jfxbop.guice.GuiceBaseView;
-import com.bekwam.jfxbop.view.Viewable;
-import com.bekwam.resignator.model.ConfigurationDataSource;
-import com.bekwam.resignator.model.Profile;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
-import javafx.animation.FadeTransition;
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.util.Duration;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 
 /**
  * JavaFX Controller and JFXBop View for the Resignator App
@@ -482,7 +479,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     public void openJarsignerConfig() {
 
-        if( StringUtils.isNotEmpty(activeConfiguration.getKeytoolExecutable()) ) {
+        // replace w. jdk_home
+
+        if( StringUtils.isNotEmpty("jdkhome") ) {
 
             JarsignerConfigController jarsignerConfigView = jarsignerConfigControllerProvider.get();
             try {

@@ -15,34 +15,30 @@
  */
 package com.bekwam.resignator;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.SystemUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.bekwam.jfxbop.view.Viewable;
 import com.bekwam.resignator.model.Configuration;
 import com.bekwam.resignator.model.ConfigurationDataSource;
-
+import com.google.common.base.Preconditions;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
-import javafx.stage.FileChooser;
+import javafx.scene.control.*;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
+import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Captures application-wide settings
@@ -60,19 +56,13 @@ public class SettingsController extends GuiceBaseView {
     private final static Logger logger = LoggerFactory.getLogger(SettingsController.class);
 
     @FXML
-    TextField tfJarsignerExec;
-
-    @FXML
-    TextField tfKeytoolExec;
+    TextField tfJDKHome;
 
     @FXML
     ProgressIndicator piSettings;
     
     @FXML
-    Label lblErrJarsignerExec;
-
-    @FXML
-    Label lblErrKeytoolExec;
+    Label lblErrJDKHome;
 
     @Inject
     ConfigurationDataSource configurationDS;
@@ -80,8 +70,7 @@ public class SettingsController extends GuiceBaseView {
     @Inject
     ActiveConfiguration activeConfiguration;
     
-    private String jarsignerDir = System.getProperty("java.home");
-    private String keytoolDir = System.getProperty("java.home");
+    private String jdkDir = System.getProperty("java.home");
     private boolean dirtyFlag = false;
     
     @FXML
@@ -90,71 +79,34 @@ public class SettingsController extends GuiceBaseView {
         if( logger.isDebugEnabled() ){
             logger.debug("[INIT]");
         }
-        tfJarsignerExec.textProperty().bindBidirectional(activeConfiguration.jarsignerExecutableProperty());
-        tfKeytoolExec.textProperty().bindBidirectional(activeConfiguration.keytoolExecutableProperty());
+        tfJDKHome.textProperty().bindBidirectional(activeConfiguration.jdkHomeProperty());
 
-        tfJarsignerExec.textProperty().addListener(evt -> {
-        	dirtyFlag = true;
-        	lblErrJarsignerExec.setVisible(false);
-            lblErrKeytoolExec.setVisible(false);
+        tfJDKHome.textProperty().addListener(evt -> {
+            dirtyFlag = true;
+            lblErrJDKHome.setVisible(false);
         });
         
         piSettings.setVisible(false);
-        lblErrJarsignerExec.setVisible(false);
-        lblErrKeytoolExec.setVisible(false);
+        lblErrJDKHome.setVisible(false);
     }
 
     @FXML
-    public void browseForJarsigner() {
+    public void browseForJDK() {
         if( logger.isDebugEnabled() ){
-            logger.debug("[BROWSE FOR JARSIGNER]");
+            logger.debug("[BROWSE FOR JDK]");
         }
 
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select jarsigner.exe");
-        fileChooser.setInitialDirectory(new File(jarsignerDir));
+        DirectoryChooser dirChooser = new DirectoryChooser();
+        dirChooser.setTitle("Select a JDK");
+        dirChooser.setInitialDirectory(new File(jdkDir));
         
-        if( SystemUtils.IS_OS_WINDOWS ) {
-        	fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("EXE", "*.exe")
-        			);
-        }
-        
-        File f = fileChooser.showOpenDialog(stage);
-        if( f != null ) {
+        File d = dirChooser.showDialog(stage);
+        if( d != null ) {
             if( logger.isDebugEnabled() ) {
-                logger.debug("[BROWSE FOR JARSIGNER] selected file={}", f.getAbsolutePath());
+                logger.debug("[BROWSE FOR JDK] selected dir={}", d.getAbsolutePath());
             }
-            tfJarsignerExec.setText(f.getAbsolutePath());
-            
-            jarsignerDir = FilenameUtils.getFullPath(f.getAbsolutePath());
-        }
-    }
-
-    @FXML
-    public void browseForKeytool() {
-        if( logger.isDebugEnabled() ){
-            logger.debug("[BROWSE FOR KEYTOOL]");
-        }
-
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select keytool.exe");
-        fileChooser.setInitialDirectory(new File(keytoolDir));
-
-        if( SystemUtils.IS_OS_WINDOWS ) {
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("EXE", "*.exe")
-            );
-        }
-
-        File f = fileChooser.showOpenDialog(stage);
-        if( f != null ) {
-            if( logger.isDebugEnabled() ) {
-                logger.debug("[BROWSE FOR KEYTOOL] selected file={}", f.getAbsolutePath());
-            }
-            tfKeytoolExec.setText(f.getAbsolutePath());
-
-            keytoolDir = FilenameUtils.getFullPath(f.getAbsolutePath());
+            tfJDKHome.setText(d.getAbsolutePath());
+            jdkDir = FilenameUtils.getFullPath(d.getAbsolutePath());
         }
     }
 
@@ -162,7 +114,7 @@ public class SettingsController extends GuiceBaseView {
     public void save(ActionEvent evt) {
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[SAVE] saving configuration; jarsignerExec={}", activeConfiguration.jarsignerExecutableProperty());
+            logger.debug("[SAVE] saving configuration; jarsignerExec={}", activeConfiguration.jdkHomeProperty());
         }
 
         try {
@@ -171,39 +123,19 @@ public class SettingsController extends GuiceBaseView {
         	
         	piSettings.setProgress(0.3d);
 
-        	if( validateJarsignerExec(activeConfiguration.getJarsignerExecutable() ) ) {
+        	if( validateJDKHome(activeConfiguration.getJDKHome()) ) {
             	piSettings.setProgress(0.4d);
         		configurationDS.saveConfiguration();
             	piSettings.setProgress(0.6d);
-            	
+
+                ((Button)evt.getSource()).getScene().getWindow().hide();
+
         	} else {
         		// report error
-        		lblErrJarsignerExec.setVisible(true);
+        		lblErrJDKHome.setVisible(true);
 
                 // still dirty
         	}
-
-            if( validateKeytoolExec(activeConfiguration.getKeytoolExecutable()) ) {
-                piSettings.setProgress(0.7d);
-                configurationDS.saveConfiguration();
-                piSettings.setProgress(1.0d);
-
-                Scene scene = ((Button)evt.getSource()).getScene();
-                if( scene != null ) {
-                    Window w = scene.getWindow();
-                    if (w != null) {
-                        w.hide();
-                    }
-                }
-
-                dirtyFlag = false;
-
-            } else {
-                // report error
-                lblErrKeytoolExec.setVisible(true);
-
-                // still dirty
-            }
 
             piSettings.setVisible(false);            
 
@@ -238,16 +170,12 @@ public class SettingsController extends GuiceBaseView {
             	Configuration savedConf = configurationDS.getConfiguration();
 
             	if( logger.isDebugEnabled() ) {
-            		logger.debug("[CANCEL] reverting configuration ac jse={} to sc jse={}", 
-            				activeConfiguration.getJarsignerExecutable(),
-            				savedConf.getJarsignerExecutable().get());
-                    logger.debug("[CANCEL] reverting configuration ac ke={} to sc ke={}",
-                            activeConfiguration.getKeytoolExecutable(),
-                            savedConf.getKeytoolExecutable().get());
+            		logger.debug("[CANCEL] reverting configuration ac jdkhome={} to sc jjdkhome={}",
+            				activeConfiguration.getJDKHome(),
+            				savedConf.getJDKHome().get());
                 }
 
-                activeConfiguration.setJarsignerExecutable( savedConf.getJarsignerExecutable().get() );
-                activeConfiguration.setKeytoolExecutable( savedConf.getKeytoolExecutable().get() );
+                activeConfiguration.setJDKHome(savedConf.getJDKHome().get());
 
             	dirtyFlag = false;
             	
@@ -265,47 +193,49 @@ public class SettingsController extends GuiceBaseView {
    		}
     }
     
-    private boolean validateJarsignerExec(String jarsignerExec) {
-    	try {
-    		if( logger.isDebugEnabled() ) {
-    			logger.debug("[VAL JARSIGNER] jarsignerExec={}", jarsignerExec);
-    		}
-    		
-    		Process p = Runtime.getRuntime().exec( jarsignerExec );
-    		
-    		int exitValue = p.waitFor();
-    		
-    		if( logger.isDebugEnabled() ) {
-    			logger.debug("[VAL JARSIGNER] retval={}", exitValue);
-    		}
+    private boolean validateJDKHome(String jdkHome) {
 
-    		return exitValue == 0;
-    		
-    	} catch(IOException | InterruptedException exc) {
-    		logger.error( "error running '{" + jarsignerExec + "}'", exc);
-    		return false;
-    	}    	
-    }
+        Preconditions.checkNotNull( jdkHome );
 
-    private boolean validateKeytoolExec(String keytoolExec) {
+        Map<Path, Integer> cmdsAndResults = new LinkedHashMap<>();
+        cmdsAndResults.put(Paths.get(jdkHome, "bin", "keytool"),0);
+        cmdsAndResults.put(Paths.get(jdkHome, "bin", "jarsigner"),0);
+        cmdsAndResults.put(Paths.get(jdkHome, "bin", "jar"),1);
+
         try {
-            if( logger.isDebugEnabled() ) {
-                logger.debug("[VAL KEYTOOL] jarsignerExec={}", keytoolExec);
+            piSettings.setVisible(true);
+            piSettings.setProgress(0.0d);
+
+            for (Path cmd : cmdsAndResults.keySet()) {
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[VAL JDKHOME] cmd={}", cmd.toString());
+                }
+
+                Process p = Runtime.getRuntime().exec(cmd.toString());
+
+                int exitValue = p.waitFor();
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[VAL JDKHOME] retval={}", exitValue);
+                }
+
+                if( exitValue != cmdsAndResults.get(cmd) ) {  // lookup expected return code
+                    return false;
+                }
+
+                piSettings.setProgress(
+                        piSettings.getProgress() + 1/cmdsAndResults.size()
+                );
             }
-
-            Process p = Runtime.getRuntime().exec( keytoolExec );
-
-            int exitValue = p.waitFor();
-
-            if( logger.isDebugEnabled() ) {
-                logger.debug("[VAL KEYTOOL] retval={}", exitValue);
-            }
-
-            return exitValue == 0;
-
-        } catch(IOException | InterruptedException exc) {
-            logger.error( "error running '{" + keytoolExec + "}'", exc);
+        } catch(IOException | InterruptedException exc){
+            logger.error("error running '{" + jdkHome + "}'", exc);
             return false;
+        } finally {
+            piSettings.setVisible( false );
+            piSettings.setProgress(0.0d);
         }
+
+        return true;
     }
 }

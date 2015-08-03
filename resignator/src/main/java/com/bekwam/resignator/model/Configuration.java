@@ -24,22 +24,15 @@ import java.util.Optional;
  */
 public class Configuration {
 
-    private Optional<String> jarsignerExecutable = Optional.empty();
-    private Optional<String> keytoolExectutable = Optional.empty();
+    private Optional<String> jdkHome = Optional.empty();
     private Optional<String> activeProfile = Optional.empty();
     private final List<String> recentProfiles = new ArrayList<>();
     private final List<Profile> profiles = new ArrayList<>();
 
-    public Optional<String> getJarsignerExecutable() { return jarsignerExecutable; }
+    public Optional<String> getJDKHome() { return jdkHome; }
 
-    public void setJarsignerExecutable(Optional<String> jarsignerExecutable) {
-        this.jarsignerExecutable = jarsignerExecutable;
-    }
-
-    public Optional<String> getKeytoolExecutable() { return keytoolExectutable; }
-
-    public void setKeytoolExecutable(Optional<String> keytoolExecutable) {
-        this.keytoolExectutable = keytoolExecutable;
+    public void setJDKHome(Optional<String> jdkHome) {
+        this.jdkHome = jdkHome;
     }
 
     public Optional<String> getActiveProfile() {
@@ -61,8 +54,7 @@ public class Configuration {
     @Override
     public String toString() {
         return "Configuration{" +
-                "jarsignerExecutable=" + jarsignerExecutable +
-                "keytoolExecutable=" + keytoolExectutable +
+                "jdkHome=" + jdkHome +
                 ", activeProfile=" + activeProfile +
                 ", recentProfiles=" + recentProfiles +
                 ", profiles=" + profiles +

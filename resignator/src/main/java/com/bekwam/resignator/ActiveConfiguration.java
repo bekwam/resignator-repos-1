@@ -15,17 +15,15 @@
  */
 package com.bekwam.resignator;
 
-import java.util.List;
-
-import javax.inject.Singleton;
-
 import com.bekwam.resignator.model.Configuration;
-
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
+
+import javax.inject.Singleton;
+import java.util.List;
 
 /**
  * @author carlwalker
@@ -34,18 +32,14 @@ import javafx.collections.FXCollections;
 @Singleton
 public class ActiveConfiguration implements ActiveRecord<Configuration> {
 
-	private final StringProperty jarsignerExecutable = new SimpleStringProperty("");
-	private final StringProperty keytoolExecutable = new SimpleStringProperty("");
+	private final StringProperty jdkHome = new SimpleStringProperty("");
 	private final StringProperty activeProfile = new SimpleStringProperty("");
 	private final ListProperty<String> recentProfiles = new SimpleListProperty<String>();
 	
-	public String getJarsignerExecutable() { return jarsignerExecutable.get(); }
-	public void setJarsignerExecutable(String je) {
-		jarsignerExecutable.set(je);
+	public String getJDKHome() { return jdkHome.get(); }
+	public void setJDKHome(String jh) {
+		jdkHome.set(jh);
 	}
-
-	public String getKeytoolExecutable() { return keytoolExecutable.get(); }
-	public void setKeytoolExecutable(String ke) { keytoolExecutable.set(ke); }
 
 	public String getActiveProfile() { return activeProfile.get(); }
 	public void setActiveProfile(String ap) {
@@ -58,22 +52,19 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 		recentProfiles.addAll( rps );
 	}
 	
-	public StringProperty jarsignerExecutableProperty() { return jarsignerExecutable; }
-	public StringProperty keytoolExecutableProperty() { return keytoolExecutable; }
+	public StringProperty jdkHomeProperty() { return jdkHome; }
 	public StringProperty activeProfileProperty() { return activeProfile; }
 	public ListProperty<String> recentProfilesProperty() { return recentProfiles; }
 	
 	@Override
 	public String toString() {
-		return "ActiveConfiguration [jarsignerExecutable=" + jarsignerExecutable + ", keytoolExecutable="
-				+ keytoolExecutable + ", activeProfile=" + activeProfile
+		return "ActiveConfiguration [jdkHome=" + jdkHome + ", activeProfile=" + activeProfile
 				+ ", recentProfiles=" + recentProfiles + "]";
 	}	
 	
 	@Override
 	public void reset() {
-		jarsignerExecutable.set("");
-		keytoolExecutable.set("");
+		jdkHome.set("");
 		activeProfile.set("");
 		recentProfiles.clear();
 	}
@@ -86,9 +77,8 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 	@Override
 	public void fromDomain(Configuration domain) {
 
-		jarsignerExecutable.setValue( domain.getJarsignerExecutable().orElse("") );
-		keytoolExecutable.setValue( domain.getKeytoolExecutable().orElse("") );
-		activeProfile.setValue( domain.getActiveProfile().orElse("") );		
+		jdkHome.setValue( domain.getJDKHome().orElse(""));
+		activeProfile.setValue( domain.getActiveProfile().orElse("") );
 		recentProfiles.setValue( FXCollections.observableList(domain.getRecentProfiles()) );
 	}
 }
