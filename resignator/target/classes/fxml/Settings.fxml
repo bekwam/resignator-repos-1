@@ -17,18 +17,12 @@
         <rowConstraints>
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Label text="Jarsigner Executable" />
-            <Button fx:id="Browse" mnemonicParsing="false" onAction="#browseForJarsigner" text="Browse" GridPane.columnIndex="2" />
-            <TextField fx:id="tfJarsignerExec" GridPane.columnIndex="1" />
-            <Label fx:id="lblErrJarsignerExec" styleClass="error" text="Not a valid jarsigner executable" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Button mnemonicParsing="false" onAction="#browseForKeytool" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <Label text="Keytool Executable" GridPane.rowIndex="2" />
-            <Label fx:id="lblErrKeytoolExec" styleClass="error" text="Not a valid keytool executable" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <TextField fx:id="tfKeytoolExec" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Label text="JDK_HOME" />
+            <Button fx:id="Browse" mnemonicParsing="false" onAction="#browseForJDK" text="Browse" GridPane.columnIndex="2" />
+            <TextField fx:id="tfJDKHome" prefWidth="400.0" GridPane.columnIndex="1" />
+            <Label fx:id="lblErrJDKHome" styleClass="error" text="Not a valid Java Development Kit" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          </children>
          <padding>
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

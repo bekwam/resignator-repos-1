@@ -15,13 +15,15 @@
  */
 package com.bekwam.resignator;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
+import com.bekwam.jfxbop.guice.GuiceBaseView;
+import com.bekwam.jfxbop.view.Viewable;
+import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.google.common.base.Preconditions;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.event.EventHandler;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -29,24 +31,16 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.stage.Window;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bekwam.jfxbop.guice.GuiceBaseView;
-import com.bekwam.jfxbop.view.Viewable;
-import com.bekwam.resignator.model.ConfigurationDataSource;
-
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.Scene;
-import javafx.stage.Window;
-
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -108,13 +102,16 @@ public class JarsignerConfigController extends GuiceBaseView {
 	private VBox vbox;
 
 	@Inject
-	protected ConfigurationDataSource configurationDS;
+	private ConfigurationDataSource configurationDS;
 
 	@Inject
-	protected ActiveProfile activeProfile;
+	private ActiveProfile activeProfile;
 
 	@Inject
-	protected KeytoolCommand keytoolCommand;
+	private ActiveConfiguration activeConfiguration;
+
+	@Inject
+	private KeytoolCommand keytoolCommand;
 
 	private String keystoreDir = System.getProperty("user.home");
 
@@ -196,7 +193,7 @@ public class JarsignerConfigController extends GuiceBaseView {
 						updateProgress( 0.1d, 1.0d );
 
 						final List<String> aliases = keytoolCommand.findAliases(
-							"C:\\Program Files\\Java\\jdk1.8.0_40\\bin\\keytool",
+								activeConfiguration.getKeytoolCommand().toString(),
 							ks,
 							sp
 						);
