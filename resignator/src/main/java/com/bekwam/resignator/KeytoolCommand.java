@@ -108,7 +108,7 @@ public class KeytoolCommand {
 
                     String firstLine = "";
                     if( outputFile != null && outputFile.exists() ) {
-                        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(outputFile)));
+                        BufferedReader br = new BufferedReader(new FileReader(outputFile));
                         firstLine = br.readLine();
                         br.close();
                     }
