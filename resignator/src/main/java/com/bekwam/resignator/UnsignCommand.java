@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.function.Consumer;
 
 /**
  * Unsigns a JAR by unpacking it, stripping signature related items from the contents including META-INF/MANIFEST.MF,
@@ -41,7 +42,7 @@ public class UnsignCommand {
     private Path tempDir = null;
     private final String JAR_COMMAND = "C:\\Program Files\\Java\\jdk1.8.0_40\\bin\\jar";
 
-    public void unsignJAR(Path sourceJARFile, Path targetJARFile) throws CommandExecutionException {
+    public void unsignJAR(Path sourceJARFile, Path targetJARFile, Consumer<String> observer) throws CommandExecutionException {
 
         if( logger.isDebugEnabled() ) {
             logger.debug("[UNSIGN] sourceJARFilePath={}, targetJARFilePath={}", sourceJARFile, targetJARFile);
@@ -50,6 +51,7 @@ public class UnsignCommand {
         //
         // Verify source jar
         //
+        observer.accept("Verifying source JAR");
         File sourceJarFile = verifySource(sourceJARFile);
 
         if(logger.isDebugEnabled() ) {
@@ -59,6 +61,7 @@ public class UnsignCommand {
         //
         // Create a temporary and unique folder
         //
+        observer.accept("Creating temp dir");
         Path appDir = createTempDir();
 
         Preconditions.checkNotNull( tempDir );
@@ -66,33 +69,40 @@ public class UnsignCommand {
         //
         // Register cleanup handler
         //
-       // registerCleanup();
+        observer.accept("Registering cleanup handler");
+        registerCleanup();
 
         //
         // Copy jarFile to temp folder
         //
+        observer.accept("Copying JAR");
         Path workingJarFile = copyJAR(sourceJarFile);
 
         //
         // Unpack JAR
         //
+        observer.accept("Unpacking JAR");
         unJAR(workingJarFile.toString(), tempDir);
+        observer.accept("Deleting working JAR file");
         workingJarFile.toFile().delete();  // don't include for later re-jar operation
 
         //
         // Locate .SF files. Remove these and corresponding signature blocks like .RSA.
         //
+        observer.accept("Removing old signature blocks");
         File metaInfDir = new File(tempDir.toFile(), "META-INF");
         removeSigs(metaInfDir);
 
         //
         // Strip the SHA.*\: entries from the MANIFEST.MF (ok to leave Name: lines?)
         //
+        observer.accept("Editing MANIFEST.MF");
         editManifest(metaInfDir);
 
         //
         // Repack JAR
         //
+        observer.accept("Repacking JAR");
         repackJAR(targetJARFile, appDir);
     }
 
@@ -264,6 +274,7 @@ public class UnsignCommand {
         UnsignCommand cmd = new UnsignCommand();
         cmd.unsignJAR(
                 Paths.get("C:\\Users\\carl_000\\git\\resignator-repos-1\\resignator\\mavenpomupdater-1.3.1.jar"),
-                Paths.get("C:\\Users\\carl_000\\.resignator\\myoutputjar.jar"));
+                Paths.get("C:\\Users\\carl_000\\.resignator\\myoutputjar.jar"),
+                s -> System.out.println(s));
     }
 }

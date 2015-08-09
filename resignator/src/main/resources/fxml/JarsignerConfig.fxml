@@ -48,7 +48,7 @@
                   <Insets right="4.0" />
                </GridPane.margin>
             </Label>
-            <TextField fx:id="tfKeystore" onAction="#validateKeystore" GridPane.columnIndex="1" GridPane.columnSpan="2" />
+            <TextField fx:id="tfKeystore" onAction="#validateKeystore" prefWidth="600.0" GridPane.columnIndex="1" GridPane.columnSpan="2" />
             <HBox alignment="CENTER_LEFT" GridPane.columnIndex="3">
                <children>
                   <Button mnemonicParsing="false" onAction="#browse" text="Browse" GridPane.columnIndex="3" />

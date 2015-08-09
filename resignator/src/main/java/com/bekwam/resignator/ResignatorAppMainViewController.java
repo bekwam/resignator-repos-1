@@ -21,6 +21,7 @@ import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.bekwam.resignator.model.Profile;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -41,6 +42,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,6 +77,15 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     TextField tfTargetFile;
 
+    @FXML
+    Label lblStatus;
+
+    @FXML
+    ProgressIndicator piSignProgress;
+
+    @FXML
+    TextArea txtConsole;
+
     @Inject
     ConfigurationDataSource configurationDS;
 
@@ -95,6 +106,12 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     
     @Inject
     ActiveProfile activeProfile;
+
+    @Inject
+    Provider<SignCommand> signCommandProvider;
+
+    @Inject
+    Provider<UnsignCommand> unsignCommandProvider;
 
     private String jarDir = System.getProperty("user.home");
 
@@ -201,6 +218,13 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         if( logger.isDebugEnabled() ) {
             logger.debug("[LOAD PROFILE]");
         }
+
+        //
+        // Clear output from last operation
+        //
+        lblStatus.setText("");
+        txtConsole.setText("");
+        piSignProgress.setProgress(0.0d);
 
         //
         // Get profiles from loaded Configuration object
@@ -451,17 +475,120 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         if( logger.isDebugEnabled() ){
             logger.debug("[COPY SOURCE TO TARGET]");
         }
-        tfTargetFile.setText( tfSourceFile.getText() );
+        tfTargetFile.setText(tfSourceFile.getText());
     }
 
     @FXML
     public void sign() {
+
         if( logger.isDebugEnabled() ) {
             logger.debug("[SIGN] activeProfile sourceFile={}, targetFile={}",
                     activeProfile.getSourceFileFileName(),
                     activeProfile.getTargetFileFileName() );
         }
+
+        UnsignCommand unsignCommand = unsignCommandProvider.get();
+        SignCommand signCommand = signCommandProvider.get();
+
+        Task<Void> task = new Task<Void>() {
+
+            @Override
+            protected Void call() throws Exception {
+
+                updateMessage("");
+                updateProgress(0.1d, 1.0d);
+                updateTitle("Unsigning JAR");
+
+                unsignCommand.unsignJAR(
+                        Paths.get(activeProfile.getSourceFileFileName()),
+                        Paths.get(activeProfile.getTargetFileFileName()),
+                        s ->
+                                Platform.runLater(() ->
+                                                txtConsole.appendText(s + System.getProperty("line.separator"))
+                                )
+                );
+
+                if( isCancelled() ) {
+                    return null;
+                }
+
+                updateProgress(0.5d, 1.0d);
+                updateTitle("Signing JAR");
+
+                signCommand.signJAR(
+                        Paths.get(activeProfile.getTargetFileFileName()),
+                        Paths.get(activeProfile.getJarsignerConfigKeystore()),
+                        activeProfile.getJarsignerConfigStorepass(),
+                        activeProfile.getJarsignerConfigAlias(),
+                        activeProfile.getJarsignerConfigKeypass(),
+                        s ->
+                                Platform.runLater(() ->
+                                                txtConsole.appendText(s + System.getProperty("line.separator"))
+                                )
+                );
+
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+
+                updateProgress(1.0d, 1.0d);
+                updateMessage("JAR signed successfully");
+
+                Platform.runLater( () -> {
+                    piSignProgress.progressProperty().unbind();
+                    lblStatus.textProperty().unbind();
+                });
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+
+                logger.error("error unsigning and signing jar", exceptionProperty().getValue());
+
+                updateProgress(1.0d, 1.0d);
+                updateMessage("Error signing JAR");
+
+                Platform.runLater(() -> {
+                    piSignProgress.progressProperty().unbind();
+                    lblStatus.textProperty().unbind();
+
+                    Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
+                    alert.showAndWait();
+                });
+            }
+
+            @Override
+            protected void cancelled() {
+                super.cancelled();
+
+                if( logger.isWarnEnabled() ) {
+                    logger.warn("signing jar operation cancelled");
+                }
+
+                updateProgress(1.0d, 1.0d);
+                updateMessage("JAR signing cancelled");
+
+                Platform.runLater(() -> {
+                    piSignProgress.progressProperty().unbind();
+                    lblStatus.textProperty().unbind();
+
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "JAR signing cancelle");
+                    alert.showAndWait();
+                });
+
+            }
+        };
+
+        piSignProgress.progressProperty().bind(task.progressProperty());
+        lblStatus.textProperty().bind(task.messageProperty());
+
+        new Thread(task).start();
     }
+
 
     @FXML
     public void openSettings() {

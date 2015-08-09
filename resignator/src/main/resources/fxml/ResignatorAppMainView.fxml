@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.input.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
@@ -48,13 +49,13 @@
               </rowConstraints>
                <children>
                   <Label text="Source JAR:" GridPane.halignment="RIGHT" />
-                  <TextField fx:id="tfSourceFile" prefWidth="400.0" GridPane.columnIndex="1" />
+                  <TextField fx:id="tfSourceFile" prefWidth="600.0" GridPane.columnIndex="1" />
                   <Button mnemonicParsing="false" onAction="#browseSource" text="Browse" GridPane.columnIndex="2" />
                   <HBox GridPane.columnIndex="1" GridPane.rowIndex="2">
                      <children>
                         <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure" />
                         <Button mnemonicParsing="false" onAction="#sign" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                        <ProgressIndicator progress="0.0">
+                        <ProgressIndicator fx:id="piSignProgress" progress="0.0">
                            <HBox.margin>
                               <Insets left="10.0" />
                            </HBox.margin>
@@ -62,7 +63,7 @@
                      </children>
                   </HBox>
                   <Label text="Target JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-                  <TextField fx:id="tfTargetFile" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <TextField fx:id="tfTargetFile" prefWidth="600.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <HBox alignment="CENTER_LEFT" GridPane.columnIndex="2" GridPane.rowIndex="1">
                      <children>
                         <Button mnemonicParsing="false" onAction="#browseTarget" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="1" />
@@ -89,7 +90,7 @@
                   </HBox>
                 <AnchorPane minHeight="0.0" minWidth="0.0" styleClass="console" VBox.vgrow="ALWAYS">
                      <children>
-                        <TextArea AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <TextArea fx:id="txtConsole" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                      </children>
                   </AnchorPane>
                </children>
@@ -99,7 +100,7 @@
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </VBox.margin>
       </SplitPane>
-      <Label text="Label" VBox.vgrow="NEVER">
+      <Label fx:id="lblStatus" VBox.vgrow="NEVER">
          <VBox.margin>
             <Insets bottom="4.0" left="10.0" right="10.0" top="4.0" />
          </VBox.margin>

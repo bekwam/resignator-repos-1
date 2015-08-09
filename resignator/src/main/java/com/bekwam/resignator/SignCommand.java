@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Consumer;
 
 /**
  * Signs a JAR file using the jarsigner command
@@ -33,7 +34,8 @@ public class SignCommand {
                         Path keystore,
                         String storepass,
                         String alias,
-                        String keypass) throws CommandExecutionException {
+                        String keypass,
+                        Consumer<String> observer) throws CommandExecutionException {
 
         if( StringUtils.isEmpty(storepass) ) {
             throw new CommandExecutionException("storepass is required");
@@ -59,6 +61,8 @@ public class SignCommand {
             throw new CommandExecutionException(String.format("jar file %s not found", jarFilePath.toString()));
         }
 
+        observer.accept( "Running jarsigner command" );
+
         String[] cmdAndArgs = {
                 JARSIGNER_COMMAND,
                 "-keystore", keystore.toString(),
@@ -71,6 +75,8 @@ public class SignCommand {
 
         CommandExecutor cmd = new CommandExecutor();
         cmd.exec(cmdAndArgs);
+
+        observer.accept( "Finished" );
     }
 
     public static void main(String[] args) throws Exception {
@@ -79,7 +85,8 @@ public class SignCommand {
                 Paths.get("C:\\Users\\carl_000\\git\\resignator-repos-1\\resignator\\mykeystore3"),
                 "ab987c",
                 "business3",
-                "ab987c"
+                "ab987c",
+                s -> System.out.println(s)
                 );
     }
 }

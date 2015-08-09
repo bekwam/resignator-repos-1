@@ -21,7 +21,7 @@
          <children>
             <Label text="JDK_HOME" />
             <Button fx:id="Browse" mnemonicParsing="false" onAction="#browseForJDK" text="Browse" GridPane.columnIndex="2" />
-            <TextField fx:id="tfJDKHome" prefWidth="400.0" GridPane.columnIndex="1" />
+            <TextField fx:id="tfJDKHome" prefWidth="600.0" GridPane.columnIndex="1" />
             <Label fx:id="lblErrJDKHome" styleClass="error" text="Not a valid Java Development Kit" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          </children>
          <padding>

@@ -39,25 +39,25 @@ public class SignCommandTest {
     @Test(expected=CommandExecutionException.class)
     public void noStorepass() throws CommandExecutionException {
         cmd = new SignCommand();
-        cmd.signJAR(null, Paths.get("keystore"), "alias", null, "keypass");
+        cmd.signJAR(null, Paths.get("keystore"), "alias", null, "keypass", s -> System.out.println(s) );
     }
 
     @Test(expected=CommandExecutionException.class)
     public void noKeypass() throws CommandExecutionException {
         cmd = new SignCommand();
-        cmd.signJAR(null, Paths.get("keystore"), "alias", "storepass", null);
+        cmd.signJAR(null, Paths.get("keystore"), "alias", "storepass", null,  s -> System.out.println(s) );
     }
 
     @Test(expected=CommandExecutionException.class)
     public void noAlias() throws CommandExecutionException {
         cmd = new SignCommand();
-        cmd.signJAR(null, Paths.get("keystore"), null, "storepass", "keypass");
+        cmd.signJAR(null, Paths.get("keystore"), null, "storepass", "keypass",  s -> System.out.println(s) );
     }
 
     @Test(expected=CommandExecutionException.class)
     public void noKeystore() throws CommandExecutionException {
         cmd = new SignCommand();
-        cmd.signJAR(null, null, "alias", "storepass", "keypass");
+        cmd.signJAR(null, null, "alias", "storepass", "keypass",  s -> System.out.println(s) );
     }
 
 }
