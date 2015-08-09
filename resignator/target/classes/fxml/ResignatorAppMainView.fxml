@@ -55,7 +55,7 @@
                      <children>
                         <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure" />
                         <Button mnemonicParsing="false" onAction="#sign" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                        <ProgressIndicator fx:id="piSignProgress" progress="0.0">
+                        <ProgressIndicator fx:id="piSignProgress" progress="0.0" visible="false">
                            <HBox.margin>
                               <Insets left="10.0" />
                            </HBox.margin>

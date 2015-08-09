@@ -225,6 +225,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         lblStatus.setText("");
         txtConsole.setText("");
         piSignProgress.setProgress(0.0d);
+        piSignProgress.setVisible(false);
 
         //
         // Get profiles from loaded Configuration object
@@ -496,6 +497,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             protected Void call() throws Exception {
 
                 updateMessage("");
+                Platform.runLater( () -> piSignProgress.setVisible(true) );
                 updateProgress(0.1d, 1.0d);
                 updateTitle("Unsigning JAR");
 
@@ -556,6 +558,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     piSignProgress.progressProperty().unbind();
                     lblStatus.textProperty().unbind();
 
+                    piSignProgress.setVisible(false);
+
                     Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
                     alert.showAndWait();
                 });
@@ -575,6 +579,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 Platform.runLater(() -> {
                     piSignProgress.progressProperty().unbind();
                     lblStatus.textProperty().unbind();
+
+                    piSignProgress.setVisible(false);
 
                     Alert alert = new Alert(Alert.AlertType.INFORMATION, "JAR signing cancelle");
                     alert.showAndWait();

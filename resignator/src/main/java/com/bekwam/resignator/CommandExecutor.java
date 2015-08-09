@@ -64,6 +64,8 @@ public class CommandExecutor {
 
     public void exec(String[] cmdAndArgs) throws CommandExecutionException {
 
+        Optional<Path> execOutput = Optional.empty();
+
         try {
 
             if( cmdAndArgs == null || cmdAndArgs.length <1 ) {
@@ -82,9 +84,9 @@ public class CommandExecutor {
             pb.redirectErrorStream(false);
 
             Path d = outputDir.orElse(workingDir);
-            Path execOutput = Files.createTempFile(d, "", ".txt");
-            execOutput.toFile().deleteOnExit();
-            pb.redirectOutput(execOutput.toFile());
+            execOutput = Optional.of(Files.createTempFile(d, "", ".txt"));
+            execOutput.get().toFile().deleteOnExit();
+            pb.redirectOutput(execOutput.get().toFile());
 
             Process p = pb.start();
 
@@ -94,7 +96,7 @@ public class CommandExecutor {
 
                 if( p.exitValue() == 0 ) {
 
-                    dumpOutputFile(execOutput);
+                    dumpOutputFile(execOutput.get());
 
                     if(logger.isDebugEnabled() ) {
                         logger.debug("[EXEC] command {} executed successfully", cmdAndArgs[0]);
@@ -102,7 +104,7 @@ public class CommandExecutor {
 
                 } else {
 
-                    dumpOutputFile(execOutput);
+                    dumpOutputFile(execOutput.get());
 
                     String msg = String.format("error invoking command %s", cmdAndArgs[0]);
                     logger.error( msg );
@@ -111,7 +113,7 @@ public class CommandExecutor {
 
             } else {
 
-                dumpOutputFile(execOutput);
+                dumpOutputFile(execOutput.get());
 
                 String msg = String.format("command %s timed out after %d seconds", cmdAndArgs[0], timeoutInSeconds);
                 logger.error( msg );
@@ -122,6 +124,17 @@ public class CommandExecutor {
             String msg = String.format("error invoking command %s", cmdAndArgs[0]);
             logger.error( msg, exc );
             throw new CommandExecutionException(msg);
+        } finally {
+
+            // can't use deleteOnExit b/c commands might pick this up
+            if( execOutput.isPresent() ) {
+                boolean wasDeleted = execOutput.get().toFile().delete();
+                if( !wasDeleted ) {
+                    if(logger.isDebugEnabled() ) {
+                        logger.debug("[EXEC] temp file '" + execOutput.get() + "' was not deleted");
+                    }
+                }
+            }
         }
     }
 
