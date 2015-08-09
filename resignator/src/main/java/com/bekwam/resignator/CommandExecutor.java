@@ -86,7 +86,6 @@ public class CommandExecutor {
             Path d = outputDir.orElse(workingDir);
             execOutput = Optional.of(Files.createTempFile(d, "", ".txt"));
             execOutput.get().toFile().deleteOnExit();
-            pb.redirectOutput(execOutput.get().toFile());
 
             Process p = pb.start();
 

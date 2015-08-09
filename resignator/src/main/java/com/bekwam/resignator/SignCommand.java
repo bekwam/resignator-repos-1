@@ -15,8 +15,10 @@
  */
 package com.bekwam.resignator;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.inject.Inject;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
@@ -28,7 +30,8 @@ import java.util.function.Consumer;
  */
 public class SignCommand {
 
-    private final String JARSIGNER_COMMAND = "C:\\Program Files\\Java\\jdk1.8.0_40\\bin\\jarsigner";
+    @Inject
+    ActiveConfiguration activeConfiguration;
 
     public void signJAR(Path jarFilePath,
                         Path keystore,
@@ -61,10 +64,12 @@ public class SignCommand {
             throw new CommandExecutionException(String.format("jar file %s not found", jarFilePath.toString()));
         }
 
-        observer.accept( "Running jarsigner command" );
+        Preconditions.checkNotNull(activeConfiguration.getJarsignerCommand() );
+
+        observer.accept("Running jarsigner command");
 
         String[] cmdAndArgs = {
-                JARSIGNER_COMMAND,
+                activeConfiguration.getJarsignerCommand().toString(),
                 "-keystore", keystore.toString(),
                 "-storepass", storepass,
                 "-keypass", keypass,

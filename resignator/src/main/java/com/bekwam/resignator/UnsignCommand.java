@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -37,10 +38,12 @@ public class UnsignCommand {
 
     private Logger logger = LoggerFactory.getLogger(UnsignCommand.class);
 
+    @Inject
+    ActiveConfiguration activeConfiguration;
+
     private final int TIMEOUT_SECS = 10;
 
     private Path tempDir = null;
-    private final String JAR_COMMAND = "C:\\Program Files\\Java\\jdk1.8.0_40\\bin\\jar";
 
     public void unsignJAR(Path sourceJARFile, Path targetJARFile, Consumer<String> observer) throws CommandExecutionException {
 
@@ -246,8 +249,9 @@ public class UnsignCommand {
     }
 
     private void repackJAR(Path targetJARFilePath, Path appDir) throws CommandExecutionException {
+        Preconditions.checkNotNull( activeConfiguration.getJarCommand() );
         String[] cmdAndArgs = {
-                JAR_COMMAND,
+                activeConfiguration.getJarCommand().toString(),
                 "cMf", targetJARFilePath.toString(),
                 "-C", tempDir.toAbsolutePath().toString(),
                 "."
@@ -259,8 +263,10 @@ public class UnsignCommand {
 
     private void unJAR(String zipFile, Path tempDir) throws CommandExecutionException {
 
+        Preconditions.checkNotNull( activeConfiguration.getJarCommand() );
+
         String[] cmdAndArgs = {
-            JAR_COMMAND,
+            activeConfiguration.getJarCommand().toString(),
             "xf", zipFile
         };
 
