@@ -16,7 +16,6 @@
 package com.bekwam.resignator.model;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.junit.Before;
@@ -87,7 +86,7 @@ public class ConfigurationJSONAdapterTest {
         conf.setActiveProfile(Optional.of("a"));
         conf.getRecentProfiles().add("a");
 
-        Profile p = new Profile("a");
+        Profile p = new Profile("a", Boolean.FALSE);
 
         SourceFile sf = new SourceFile("C:\\jars\\mycode.jar");
         p.setSourceFile(Optional.of(sf));

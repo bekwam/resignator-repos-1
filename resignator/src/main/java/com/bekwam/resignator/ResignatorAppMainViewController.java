@@ -86,6 +86,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     TextArea txtConsole;
 
+    @FXML
+    CheckBox ckReplace;
+
     @Inject
     ConfigurationDataSource configurationDS;
 
@@ -124,6 +127,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             activeConfiguration.activeProfileProperty().bindBidirectional(activeProfile.profileNameProperty());
             tfSourceFile.textProperty().bindBidirectional(activeProfile.sourceFileFileNameProperty());
             tfTargetFile.textProperty().bindBidirectional(activeProfile.targetFileFileNameProperty() );
+            ckReplace.selectedProperty().bindBidirectional(activeProfile.replaceSignaturesProperty());
 
         } catch(Exception exc) {
 
@@ -184,8 +188,6 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             ft.play();
 
             ft.setOnFinished( (e) -> sp.getItems().remove(console) );
-
-            return;
         }
     }
 
@@ -488,6 +490,25 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     activeProfile.getTargetFileFileName() );
         }
 
+        final Boolean doUnsign = ckReplace.isSelected();
+
+        //
+        // #2 confirm an overwrite (if needed)
+        //
+        if (doUnsign) {
+            Alert alert = new Alert(
+                    Alert.AlertType.CONFIRMATION,
+                    "Overwrite any existing signatures in JAR?");
+            alert.setHeaderText("Overwrite signatures");
+            Optional<ButtonType> response = alert.showAndWait();
+            if (!response.isPresent() || response.get() != ButtonType.OK) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[SIGN] overwrite cancelled");
+                }
+                return;
+            }
+        }
+
         UnsignCommand unsignCommand = unsignCommandProvider.get();
         SignCommand signCommand = signCommandProvider.get();
 
@@ -497,21 +518,26 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             protected Void call() throws Exception {
 
                 updateMessage("");
-                Platform.runLater( () -> piSignProgress.setVisible(true) );
+                Platform.runLater(() -> piSignProgress.setVisible(true));
                 updateProgress(0.1d, 1.0d);
-                updateTitle("Unsigning JAR");
 
-                unsignCommand.unsignJAR(
-                        Paths.get(activeProfile.getSourceFileFileName()),
-                        Paths.get(activeProfile.getTargetFileFileName()),
-                        s ->
-                                Platform.runLater(() ->
-                                                txtConsole.appendText(s + System.getProperty("line.separator"))
-                                )
-                );
+                if (doUnsign) {
+                    updateTitle("Unsigning JAR");
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[SIGN] doing unsign operation");
+                    }
+                    unsignCommand.unsignJAR(
+                            Paths.get(activeProfile.getSourceFileFileName()),
+                            Paths.get(activeProfile.getTargetFileFileName()),
+                            s ->
+                                    Platform.runLater(() ->
+                                                    txtConsole.appendText(s + System.getProperty("line.separator"))
+                                    )
+                    );
 
-                if( isCancelled() ) {
-                    return null;
+                    if (isCancelled()) {
+                        return null;
+                    }
                 }
 
                 updateProgress(0.5d, 1.0d);

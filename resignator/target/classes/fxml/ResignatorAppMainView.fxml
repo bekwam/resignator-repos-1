@@ -51,10 +51,21 @@
                   <Label text="Source JAR:" GridPane.halignment="RIGHT" />
                   <TextField fx:id="tfSourceFile" prefWidth="600.0" GridPane.columnIndex="1" />
                   <Button mnemonicParsing="false" onAction="#browseSource" text="Browse" GridPane.columnIndex="2" />
-                  <HBox GridPane.columnIndex="1" GridPane.rowIndex="2">
+                  <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="2">
                      <children>
-                        <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure" />
-                        <Button mnemonicParsing="false" onAction="#sign" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure">
+                           <HBox.margin>
+                              <Insets right="10.0" />
+                           </HBox.margin></Button>
+                        <CheckBox fx:id="ckReplace" mnemonicParsing="false" text="Replace existing signatures?">
+                           <HBox.margin>
+                              <Insets right="10.0" />
+                           </HBox.margin>
+                        </CheckBox>
+                        <Button mnemonicParsing="false" onAction="#sign" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                           <HBox.margin>
+                              <Insets right="10.0" />
+                           </HBox.margin></Button>
                         <ProgressIndicator fx:id="piSignProgress" progress="0.0" visible="false">
                            <HBox.margin>
                               <Insets left="10.0" />

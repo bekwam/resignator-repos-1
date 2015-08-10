@@ -15,19 +15,17 @@
  */
 package com.bekwam.resignator;
 
-import java.util.Optional;
-
-import javax.inject.Singleton;
-
 import com.bekwam.resignator.model.JarsignerConfig;
 import com.bekwam.resignator.model.Profile;
 import com.bekwam.resignator.model.SourceFile;
 import com.bekwam.resignator.model.TargetFile;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+
+import javax.inject.Singleton;
+import java.util.Optional;
 
 /**
  * @author carl_000
@@ -43,6 +41,7 @@ public class ActiveProfile implements ActiveRecord<Profile> {
     private StringProperty jarsignerConfigKeypass = new SimpleStringProperty("");
     private StringProperty jarsignerConfigKeystore = new SimpleStringProperty("");
     private BooleanProperty jarsignerConfigVerbose = new SimpleBooleanProperty(Boolean.FALSE);
+    private BooleanProperty replaceSignatures = new SimpleBooleanProperty(Boolean.FALSE);
 
     public String getProfileName() { return profileName.get(); }
     public void setProfileName(String profileName_s) { profileName.set(profileName_s); }
@@ -68,6 +67,14 @@ public class ActiveProfile implements ActiveRecord<Profile> {
     public Boolean getJarsignerConfigVerbose() { return jarsignerConfigVerbose.get(); }
     public void setJarsignerConfigVerbose(Boolean jarsignerConfigVerbose_b) { jarsignerConfigVerbose.set(jarsignerConfigVerbose_b); }
 
+    public Boolean getReplaceSignatures() {
+        return replaceSignatures.get();
+    }
+
+    public void setReplaceSignatures(Boolean replaceSignatures_b) {
+        replaceSignatures.set(replaceSignatures_b);
+    }
+
     public StringProperty profileNameProperty() { return profileName; }
     public StringProperty sourceFileFileNameProperty() { return sourceFileFileName; }
     public StringProperty targetFileFileNameProperty() { return targetFileFileName; }
@@ -76,6 +83,10 @@ public class ActiveProfile implements ActiveRecord<Profile> {
     public StringProperty jarsignerConfigKeypassProperty() { return jarsignerConfigKeypass; }
     public StringProperty jarsignerConfigKeystoreProperty() { return jarsignerConfigKeystore; }
     public BooleanProperty jarsignerConfigVerboseProperty() { return jarsignerConfigVerbose; }
+
+    public BooleanProperty replaceSignaturesProperty() {
+        return replaceSignatures;
+    }
 
     @Override
     public void reset() {
@@ -87,12 +98,13 @@ public class ActiveProfile implements ActiveRecord<Profile> {
         jarsignerConfigKeypass.setValue("");
         jarsignerConfigKeystore.setValue("");
         jarsignerConfigVerbose.setValue(Boolean.FALSE);
+        replaceSignatures.setValue(Boolean.FALSE);
     }
 
     @Override
     public Profile toDomain() {
 
-        Profile p = new Profile( profileName.get() );
+        Profile p = new Profile(profileName.get(), replaceSignatures.get());
 
         SourceFile sf = new SourceFile( sourceFileFileName.get() );
         p.setSourceFile(Optional.of(sf));
@@ -115,6 +127,7 @@ public class ActiveProfile implements ActiveRecord<Profile> {
     public void fromDomain(Profile p) {
 
         profileName.set( p.getProfileName() );
+        replaceSignatures.set(p.getReplaceSignatures());
 
         sourceFileFileName.set(p.getSourceFile().orElse(new SourceFile("")).getFileName());
         targetFileFileName.set(p.getTargetFile().orElse(new TargetFile("")).getFileName());

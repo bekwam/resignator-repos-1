@@ -23,12 +23,14 @@ import java.util.Optional;
 public class Profile {
 
     private final String profileName;
+    private final Boolean replaceSignatures;
     private Optional<SourceFile> sourceFile = Optional.empty();
     private Optional<TargetFile> targetFile = Optional.empty();
     private Optional<JarsignerConfig> jarsignerConfig = Optional.empty();
 
-    public Profile(String profileName) {
+    public Profile(String profileName, Boolean replaceSignatures) {
         this.profileName = profileName;
+        this.replaceSignatures = replaceSignatures;
     }
 
     public String getProfileName() {
@@ -59,6 +61,10 @@ public class Profile {
         this.jarsignerConfig = jarsignerConfig;
     }
 
+    public Boolean getReplaceSignatures() {
+        return replaceSignatures;
+    }
+
     @Override
     public String toString() {
         return "Profile{" +
@@ -66,6 +72,7 @@ public class Profile {
                 ", sourceFile=" + sourceFile +
                 ", targetFile=" + targetFile +
                 ", jarsignerConfig=" + jarsignerConfig +
+                ", replaceSignatures=" + replaceSignatures +
                 '}';
     }
 }

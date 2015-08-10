@@ -91,12 +91,17 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
             JsonObject profileObj = (JsonObject)e;
             String profileName = profileObj.get("profileName").getAsString();
 
-            Profile p = new Profile(profileName);
+            Boolean rs = Boolean.FALSE;
+            if (profileObj.get("replaceSignatures") != null) {
+                rs = profileObj.get("replaceSignatures").getAsBoolean();
+            }
+
+            Profile p = new Profile(profileName, rs);
 
             //
             // SourceFile part
             //
-            JsonObject sourceObj = (JsonObject)profileObj.getAsJsonObject("sourceFile");
+            JsonObject sourceObj = profileObj.getAsJsonObject("sourceFile");
             if( sourceObj != null ) {
                 JsonElement sfe = sourceObj.get("fileName");
                 if( sfe != null ) {
@@ -108,7 +113,7 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
             //
             // TargetFile part
             //
-            JsonObject targetObj = (JsonObject)profileObj.getAsJsonObject("targetFile");
+            JsonObject targetObj = profileObj.getAsJsonObject("targetFile");
             if( sourceObj != null ) {
                 JsonElement tfe = targetObj.get("fileName");
                 if( tfe != null ) {
@@ -120,7 +125,7 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
             //
             // JarsignerConfig part
             //
-            JsonObject jcObj = (JsonObject)profileObj.getAsJsonObject("jarsignerConfig");
+            JsonObject jcObj = profileObj.getAsJsonObject("jarsignerConfig");
             if( jcObj != null ) {
 
                 String alias = "";
@@ -205,6 +210,7 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
             JsonObject profileObj = new JsonObject();
 
             profileObj.addProperty("profileName", p.getProfileName());
+            profileObj.addProperty("replaceSignatures", p.getReplaceSignatures());
 
             if( p.getSourceFile().isPresent() ) {
                 SourceFile sf = p.getSourceFile().get();
