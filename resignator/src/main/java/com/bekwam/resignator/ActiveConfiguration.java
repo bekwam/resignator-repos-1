@@ -15,18 +15,21 @@
  */
 package com.bekwam.resignator;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.inject.Singleton;
+
 import com.bekwam.resignator.model.Configuration;
+
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
-
-import javax.inject.Singleton;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * @author carlwalker
@@ -51,7 +54,9 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 		// register a change listener for computed properties
 		//
 
-		jdkHome.addListener(observable -> formJDKCommands());
+		jdkHome.addListener(observable -> formJDKCommands());	
+		
+		setRecentProfiles(new ArrayList<String>());
 	}
 
 	public String getJDKHome() { return jdkHome.get(); }
@@ -66,8 +71,7 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 
 	public List<String> getRecentProfiles() { return recentProfiles.get(); }
 	public void setRecentProfiles(List<String> rps) {
-		recentProfiles.clear();
-		recentProfiles.addAll( rps );
+		recentProfiles.setValue( FXCollections.observableArrayList(rps) );
 	}
 
 	public Path getKeytoolCommand() {

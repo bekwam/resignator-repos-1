@@ -224,7 +224,7 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
         configFile = Optional.of( cf );
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[INIT FS] configFile already existed?={}", retval);
+            logger.debug("[INIT FS] configFile newly created?={}", retval);
         }
 
         if( retval ) { // write out empty json
