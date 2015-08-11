@@ -640,7 +640,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
         // replace w. jdk_home
 
-        if( StringUtils.isNotEmpty("jdkhome") ) {
+        if( StringUtils.isNotEmpty(activeConfiguration.getJDKHome()) ) {
 
             JarsignerConfigController jarsignerConfigView = jarsignerConfigControllerProvider.get();
             try {
@@ -653,16 +653,16 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             }
         } else {
             if( logger.isDebugEnabled() ) {
-                logger.debug("[OPEN JARSIGNER CONFIG] keytool.exe not set");
+                logger.debug("[OPEN JARSIGNER CONFIG] JDK_HOME not set");
             }
 
             Alert alert = new Alert(
                     Alert.AlertType.ERROR,
-                    "Set keytool.exe in File > Settings");
-            alert.setHeaderText("Keytool not defined");
+                    "Set JDK_HOME in File > Settings");
+            alert.setHeaderText("JDK_HOME not defined");
 
             FlowPane fp = new FlowPane();
-            Label lbl = new Label("Set keytool in ");
+            Label lbl = new Label("Set JDK_HOME in ");
             Hyperlink link = new Hyperlink("File > Settings");
             fp.getChildren().addAll( lbl, link);
 
