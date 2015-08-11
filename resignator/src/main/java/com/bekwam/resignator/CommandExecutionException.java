@@ -22,7 +22,9 @@ package com.bekwam.resignator;
  */
 public class CommandExecutionException extends Exception {
 
-    public CommandExecutionException(String message) {
+	private static final long serialVersionUID = 8454824353765192272L;
+
+	public CommandExecutionException(String message) {
         super(message);
     }
 }

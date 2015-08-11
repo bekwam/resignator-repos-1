@@ -202,13 +202,13 @@ public class KeytoolCommand {
                             String[] toks = st.getTokenArray();
                             currEntry = new KeystoreEntry(currEntry, toks[1]);
                             entries.add(currEntry);
-                        } else {
-                            System.err.println("parsing error on line=" + line);
-                        }
+                        } 
                     }
 
                     parseState = KeystoreListParseStateType.ENTRY;
-
+                    break;
+                    
+                case ERROR_END:
                 case END:
                     break;
             }

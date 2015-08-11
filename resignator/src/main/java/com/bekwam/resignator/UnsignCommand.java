@@ -147,7 +147,7 @@ public class UnsignCommand {
                         logger.debug("[UNSIGN] tempDir is not null");
                     }
                     try {
-                        Path d = Files.walkFileTree(tempDir, new SimpleFileVisitor<Path>() {
+                        Files.walkFileTree(tempDir, new SimpleFileVisitor<Path>() {
                             @Override
                             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                                 if (logger.isDebugEnabled()) {

@@ -15,16 +15,21 @@
  */
 package com.bekwam.resignator;
 
-import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Executes an OS command as a Process
@@ -39,7 +44,7 @@ public class CommandExecutor {
 
     private final Path workingDir;
     private final int timeoutInSeconds;
-    private final Optional<Path> outputDir = Optional.empty();
+    private final Optional<Path> outputDir;
 
     public CommandExecutor() {
         this(DEFAULT_TIMEOUT_IN_SECONDS);
@@ -48,18 +53,21 @@ public class CommandExecutor {
     public CommandExecutor(int timeoutInSeconds) {
         this.timeoutInSeconds = timeoutInSeconds;
         this.workingDir = Paths.get(System.getProperty("user.dir"));
+        this.outputDir = Optional.empty();
     }
 
     public CommandExecutor(int timeoutInSeconds, Path workingDir) {
         Preconditions.checkNotNull(workingDir);
         this.timeoutInSeconds = timeoutInSeconds;
         this.workingDir = workingDir;
+        this.outputDir = Optional.empty();
     }
 
     public CommandExecutor(int timeoutInSeconds, Path workingDir, Path outputDir) {
-        this(timeoutInSeconds, workingDir);
+        this.timeoutInSeconds = timeoutInSeconds;
+        this.workingDir = Paths.get(System.getProperty("user.dir"));
         Preconditions.checkNotNull(outputDir);
-        this.outputDir.of(outputDir);
+        this.outputDir = Optional.of(outputDir);
     }
 
     public void exec(String[] cmdAndArgs) throws CommandExecutionException {
