@@ -65,7 +65,7 @@ public class CommandExecutor {
 
     public CommandExecutor(int timeoutInSeconds, Path workingDir, Path outputDir) {
         this.timeoutInSeconds = timeoutInSeconds;
-        this.workingDir = Paths.get(System.getProperty("user.dir"));
+        this.workingDir = workingDir;
         Preconditions.checkNotNull(outputDir);
         this.outputDir = Optional.of(outputDir);
     }
