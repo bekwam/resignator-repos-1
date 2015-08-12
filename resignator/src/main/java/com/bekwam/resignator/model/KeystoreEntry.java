@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.bekwam.resignator;
+package com.bekwam.resignator.model;
 
 import com.google.common.base.Preconditions;
 

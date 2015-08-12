@@ -15,7 +15,7 @@
  */
 package com.bekwam.resignator.commands;
 
-import com.bekwam.resignator.KeystoreEntry;
+import com.bekwam.resignator.model.KeystoreEntry;
 import com.google.common.base.Preconditions;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
