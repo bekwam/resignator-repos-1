@@ -193,6 +193,22 @@ public class UnsignCommand {
         return workingJarFile;
     }
 
+    public void copyJAR(String sourceJarFileName, String targetJarFileName) throws CommandExecutionException {
+
+    	Path sourceJarFile = Paths.get(sourceJarFileName);
+    	Path targetJarFile = Paths.get(targetJarFileName);
+    	
+        try {
+
+        	Files.copy(sourceJarFile, targetJarFile, StandardCopyOption.REPLACE_EXISTING);
+            
+        } catch(IOException exc) {
+            String msg = String.format("can't copy %s to %s", sourceJarFileName, targetJarFileName);
+            logger.error( msg, exc );
+            throw new CommandExecutionException( msg );
+        }    	
+    }
+    
     private void removeSigs(File metaInfDir) {
         File[] sfFiles = metaInfDir.listFiles(
                 pathname -> StringUtils.endsWith(pathname.getName(), ".SF")

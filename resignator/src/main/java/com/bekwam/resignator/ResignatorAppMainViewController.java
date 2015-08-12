@@ -15,41 +15,56 @@
  */
 package com.bekwam.resignator;
 
-import com.bekwam.jfxbop.guice.GuiceBaseView;
-import com.bekwam.jfxbop.view.Viewable;
-import com.bekwam.resignator.commands.SignCommand;
-import com.bekwam.resignator.commands.UnsignCommand;
-import com.bekwam.resignator.model.ConfigurationDataSource;
-import com.bekwam.resignator.model.Profile;
-import javafx.animation.FadeTransition;
-import javafx.application.Platform;
-import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.util.Duration;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.bekwam.jfxbop.guice.GuiceBaseView;
+import com.bekwam.jfxbop.view.Viewable;
+import com.bekwam.resignator.commands.SignCommand;
+import com.bekwam.resignator.commands.UnsignCommand;
+import com.bekwam.resignator.model.ConfigurationDataSource;
+import com.bekwam.resignator.model.Profile;
+
+import javafx.animation.FadeTransition;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 
 /**
  * JavaFX Controller and JFXBop View for the Resignator App
@@ -509,8 +524,29 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 }
                 return;
             }
-        }
+        } else {
 
+        	//
+        	// #6 sign-only to a different target filename needs a copy and
+        	// possible overwrite
+        	//
+        	
+        	File tf = new File(activeProfile.getTargetFileFileName());
+        	if( tf.exists() ) {
+                Alert alert = new Alert(
+                        Alert.AlertType.CONFIRMATION,
+                        "Overwrite existing file '" + tf.getName() + "'?");
+                alert.setHeaderText("Overwrite existing file");
+                Optional<ButtonType> response = alert.showAndWait();
+                if (!response.isPresent() || response.get() != ButtonType.OK) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[SIGN] overwrite file cancelled");
+                    }
+                    return;
+                }        		
+        	}
+        }
+        
         UnsignCommand unsignCommand = unsignCommandProvider.get();
         SignCommand signCommand = signCommandProvider.get();
 
@@ -524,10 +560,10 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 updateProgress(0.1d, 1.0d);
 
                 if (doUnsign) {
-                    updateTitle("Unsigning JAR");
                     if (logger.isDebugEnabled()) {
                         logger.debug("[SIGN] doing unsign operation");
                     }
+                    updateTitle("Unsigning JAR");
                     unsignCommand.unsignJAR(
                             Paths.get(activeProfile.getSourceFileFileName()),
                             Paths.get(activeProfile.getTargetFileFileName()),
@@ -540,6 +576,20 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     if (isCancelled()) {
                         return null;
                     }
+                } else {
+                	
+                	//
+                	// #6 needs a copy to the target if target file doesn't
+                	// exist
+                	//
+                	if( logger.isDebugEnabled() ) {
+                		logger.debug("[SIGN] copying for sign operation");
+                	}
+                	updateTitle("Copying JAR");
+                	Platform.runLater( 
+                			() -> txtConsole.appendText("Copying JAR" + System.getProperty("line.separator")) 
+                			);
+                	unsignCommand.copyJAR(activeProfile.getSourceFileFileName(), activeProfile.getTargetFileFileName());
                 }
 
                 updateProgress(0.5d, 1.0d);
