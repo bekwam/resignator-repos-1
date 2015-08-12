@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.bekwam.resignator.model;
+package com.bekwam.resignator.commands;
 
-import com.bekwam.resignator.CommandExecutionException;
-import com.bekwam.resignator.SignCommand;
+import com.bekwam.resignator.commands.CommandExecutionException;
+import com.bekwam.resignator.commands.SignCommand;
+
 import org.junit.Before;
 import org.junit.Test;
 

@@ -17,6 +17,8 @@ package com.bekwam.resignator;
 
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.bekwam.jfxbop.view.Viewable;
+import com.bekwam.resignator.commands.SignCommand;
+import com.bekwam.resignator.commands.UnsignCommand;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.bekwam.resignator.model.Profile;
 import javafx.animation.FadeTransition;

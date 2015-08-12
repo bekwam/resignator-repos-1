@@ -17,6 +17,8 @@ package com.bekwam.resignator;
 
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.bekwam.jfxbop.view.Viewable;
+import com.bekwam.resignator.commands.CommandExecutionException;
+import com.bekwam.resignator.commands.KeytoolCommand;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.google.common.base.Preconditions;
 import javafx.application.Platform;

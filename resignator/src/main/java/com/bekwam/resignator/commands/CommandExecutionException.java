@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.bekwam.resignator;
+package com.bekwam.resignator.commands;
 
 /**
  * A checked exception thrown when there is a problem executing the underlying command
