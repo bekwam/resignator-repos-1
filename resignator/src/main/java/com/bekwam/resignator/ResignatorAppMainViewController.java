@@ -245,7 +245,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         txtConsole.setText("");
         piSignProgress.setProgress(0.0d);
         piSignProgress.setVisible(false);
-
+        clearValidationErrors();
+        
         //
         // Get profiles from loaded Configuration object
         //
@@ -448,6 +449,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             logger.debug("[BROWSE SOURCE]");
         }
 
+        clearValidationErrors();
+        
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Source JAR");
         fileChooser.setInitialDirectory(new File(jarDir));
@@ -472,6 +475,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             logger.debug("[BROWSE TARGET]");
         }
 
+        clearValidationErrors();
+        
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Target JAR");
         fileChooser.setInitialDirectory(new File(jarDir));
@@ -495,9 +500,63 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         if( logger.isDebugEnabled() ){
             logger.debug("[COPY SOURCE TO TARGET]");
         }
+        clearValidationErrors();
         tfTargetFile.setText(tfSourceFile.getText());
     }
 
+    @FXML
+    public void clearValidationErrors() {
+    	if( tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
+    		tfSourceFile.getStyleClass().remove("tf-validation-error");
+    	}
+    	if( tfTargetFile.getStyleClass().contains("tf-validation-error") ) {
+    		tfTargetFile.getStyleClass().remove("tf-validation-error");
+    	}
+    }
+    
+    private boolean validateSign() {
+    
+    	if( logger.isDebugEnabled() ) {
+    		logger.debug("[VALIDATE]");
+    	}
+    	
+    	boolean isValid = true;
+    	
+    	if( StringUtils.isBlank(activeProfile.getSourceFileFileName() ) ) {
+
+    		if( !tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
+    			tfSourceFile.getStyleClass().add("tf-validation-error");
+    		}    		
+    		isValid = false;
+    	} else {
+    		
+    		if( !new File(activeProfile.getSourceFileFileName()).exists() ) {
+    			
+                Alert alert = new Alert(
+                		Alert.AlertType.ERROR,
+                		"Specified Source JAR does not exist"
+                		);
+                
+                alert.showAndWait();
+
+        		if( !tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
+        			tfSourceFile.getStyleClass().add("tf-validation-error");
+        		}    		
+
+        		isValid = false;
+    		}
+    	}
+    	
+    	if( StringUtils.isBlank(activeProfile.getTargetFileFileName() ) ) {
+    		if( !tfTargetFile.getStyleClass().contains("tf-validation-error") ) {
+    			tfTargetFile.getStyleClass().add("tf-validation-error");
+    		}
+    		isValid = false;    		
+    	}
+    	
+    	return isValid;
+    }
+    
     @FXML
     public void sign() {
 
@@ -507,6 +566,15 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     activeProfile.getTargetFileFileName() );
         }
 
+        boolean isValid = validateSign();
+        
+        if( !isValid ) {
+        	if( logger.isDebugEnabled() ) {
+        		logger.debug("[SIGN] form not valid; returning");
+        	}
+        	return;
+        }
+        
         final Boolean doUnsign = ckReplace.isSelected();
 
         //
@@ -690,8 +758,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     public void openJarsignerConfig() {
 
-        // replace w. jdk_home
-
+    	clearValidationErrors();
+    	
         if( StringUtils.isNotEmpty(activeConfiguration.getJDKHome()) ) {
 
             JarsignerConfigController jarsignerConfigView = jarsignerConfigControllerProvider.get();

@@ -20,3 +20,8 @@
 	-fx-font-size: 11px;
 }
 
+.tf-validation-error {
+	-fx-border-color: red;
+	-fx-border-radius: 4;
+	-fx-background-color: pink;
+}
