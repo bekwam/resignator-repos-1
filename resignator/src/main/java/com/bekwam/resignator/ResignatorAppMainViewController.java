@@ -522,12 +522,17 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     	
     	boolean isValid = true;
     	
+    	//
+    	// Validate the Source JAR field
+    	//
+    	
     	if( StringUtils.isBlank(activeProfile.getSourceFileFileName() ) ) {
 
     		if( !tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
     			tfSourceFile.getStyleClass().add("tf-validation-error");
     		}    		
     		isValid = false;
+    		
     	} else {
     		
     		if( !new File(activeProfile.getSourceFileFileName()).exists() ) {
@@ -547,11 +552,62 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     		}
     	}
     	
+    	//
+    	// Validate the TargetJAR field
+    	//
+    	
     	if( StringUtils.isBlank(activeProfile.getTargetFileFileName() ) ) {
     		if( !tfTargetFile.getStyleClass().contains("tf-validation-error") ) {
     			tfTargetFile.getStyleClass().add("tf-validation-error");
     		}
     		isValid = false;    		
+    	}
+    	
+    	//
+    	// #13 Validate the Jarsigner Config form
+    	//
+    	
+    	String jarsignerConfigField = "";
+    	String jarsignerConfigMessage = "";
+    	if( StringUtils.isBlank(activeProfile.getJarsignerConfigKeystore() ) ) {
+    		jarsignerConfigField = "Keystore";
+    		jarsignerConfigMessage = "A keystore must be specified";        		
+    	} else if( StringUtils.isBlank(activeProfile.getJarsignerConfigStorepass() ) ) {
+    		jarsignerConfigField = "Storepass";
+        	jarsignerConfigMessage = "A password for the keystore must be specified";
+    	} else if( StringUtils.isBlank(activeProfile.getJarsignerConfigAlias() ) ) {
+        	jarsignerConfigField = "Alias";
+        	jarsignerConfigMessage = "An alias for the key must be specified";
+        } else if( StringUtils.isBlank(activeProfile.getJarsignerConfigKeypass() ) ) {
+        	jarsignerConfigField = "Keypass";
+    		jarsignerConfigMessage = "A password for the key must be specified";        		
+        }
+    	
+    	if( StringUtils.isNotEmpty(jarsignerConfigMessage) ) {
+    	
+    		if( logger.isDebugEnabled() ) {
+    			logger.debug("[VALIDATE] jarsigner config not valid {}", jarsignerConfigMessage);
+    		}
+    		
+            Alert alert = new Alert(
+                    Alert.AlertType.ERROR,
+                    "Set " + jarsignerConfigField + " in Configure");
+            alert.setHeaderText(jarsignerConfigMessage);
+
+            FlowPane fp = new FlowPane();
+            Label lbl = new Label("Set " + jarsignerConfigField + " in ");
+            Hyperlink link = new Hyperlink("Configure");
+            fp.getChildren().addAll( lbl, link);
+
+            link.setOnAction( (evt) -> {
+                alert.close();
+                openJarsignerConfig();
+            } );
+
+            alert.getDialogPane().contentProperty().set( fp );
+            alert.showAndWait();
+            
+            isValid = false;
     	}
     	
     	return isValid;
