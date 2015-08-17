@@ -48,7 +48,10 @@
                   <Insets right="4.0" />
                </GridPane.margin>
             </Label>
-            <TextField fx:id="tfKeystore" onAction="#validateKeystore" prefWidth="600.0" GridPane.columnIndex="1" GridPane.columnSpan="2" />
+            <TextField fx:id="tfKeystore" onAction="#validateKeystore" prefWidth="600.0" GridPane.columnIndex="1" GridPane.columnSpan="2">
+               <tooltip>
+                  <Tooltip text="JKS store containing keys" />
+               </tooltip></TextField>
             <HBox alignment="CENTER_LEFT" GridPane.columnIndex="3">
                <children>
                   <Button mnemonicParsing="false" onAction="#browse" text="Browse" GridPane.columnIndex="3" />
@@ -59,10 +62,16 @@
                   </Label>
                </children>
             </HBox>
-            <PasswordField fx:id="pfStorepass" onAction="#resetConfStorepass" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <PasswordField fx:id="pfStorepass" onAction="#resetConfStorepass" onKeyPressed="#clearValidationErrors" onMouseClicked="#clearValidationErrors" GridPane.columnIndex="1" GridPane.rowIndex="1">
+               <tooltip>
+                  <Tooltip autoHide="true" text="Required - password for keystore" />
+               </tooltip></PasswordField>
             <PasswordField fx:id="pfConfStorepass" onAction="#verifyStorepass" GridPane.columnIndex="3" GridPane.rowIndex="1" />
             <ChoiceBox fx:id="cbAlias" disable="true" prefWidth="200.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" />
-            <PasswordField fx:id="pfKeypass" onAction="#resetConfKeypass" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <PasswordField fx:id="pfKeypass" onAction="#resetConfKeypass" GridPane.columnIndex="1" GridPane.rowIndex="3">
+               <tooltip>
+                  <Tooltip autoHide="true" text="Required - password for key described by alias" />
+               </tooltip></PasswordField>
             <PasswordField fx:id="pfConfKeypass" onAction="#verifyKeypass" GridPane.columnIndex="3" GridPane.rowIndex="3" />
             <ChoiceBox fx:id="cbVerbose" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
             <Label text="Confirm Keypass" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />

@@ -47,6 +47,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
@@ -292,6 +293,21 @@ public class JarsignerConfigController extends GuiceBaseView {
 		Preconditions.checkNotNull(pfKeypass.textProperty());
 		Preconditions.checkNotNull(pfConfKeypass.textProperty());
 
+		if( StringUtils.isBlank(pfStorepass.textProperty().getValue() ) ) {
+			
+    		if( !pfKeypass.getStyleClass().contains("tf-validation-error") ) {
+    			pfKeypass.getStyleClass().add("tf-validation-error");
+    		}    		
+
+    		cbAlias.getItems().clear();
+			cbAlias.setDisable( true );
+
+			Tooltip tt = pfKeypass.getTooltip();
+			tt.show(pfKeypass.getParent().getScene().getWindow());
+
+			return;
+		} 
+
 		if( StringUtils.equals(pfKeypass.textProperty().getValue(), pfConfKeypass.textProperty().getValue()) ) {
 			lblConfKeypass.setText("Ok");
 			lblConfKeypass.setTextFill(Color.GREEN);
@@ -301,6 +317,8 @@ public class JarsignerConfigController extends GuiceBaseView {
 		}
 
 		lblConfKeypass.setVisible(true);
+		
+		clearValidationErrors();
 	}
 
 	@FXML
@@ -312,12 +330,37 @@ public class JarsignerConfigController extends GuiceBaseView {
 		lblConfStorepass.setVisible(false);
 	}
 
-	@FXML
+    @FXML
+    public void clearValidationErrors() {
+    	if( pfStorepass.getStyleClass().contains("tf-validation-error") ) {
+    		pfStorepass.getStyleClass().remove("tf-validation-error");
+    	}
+    	if( pfKeypass.getStyleClass().contains("tf-validation-error") ) {
+    		pfKeypass.getStyleClass().remove("tf-validation-error");
+    	}
+    }
+
+    @FXML
 	public void verifyStorepass() {
 
 		Preconditions.checkNotNull(pfStorepass.textProperty());
 		Preconditions.checkNotNull(pfConfStorepass.textProperty());
 
+		if( StringUtils.isBlank(pfStorepass.textProperty().getValue() ) ) {
+			
+    		if( !pfStorepass.getStyleClass().contains("tf-validation-error") ) {
+    			pfStorepass.getStyleClass().add("tf-validation-error");
+    		}    		
+
+    		cbAlias.getItems().clear();
+			cbAlias.setDisable( true );
+
+			Tooltip tt = pfStorepass.getTooltip();
+			tt.show(pfStorepass.getParent().getScene().getWindow());
+			
+			return;
+		} 
+			
 		if( StringUtils.equals(pfStorepass.textProperty().getValue(), pfConfStorepass.textProperty().getValue()) ) {
 			lblConfStorepass.setText("Ok");
 			lblConfStorepass.setTextFill(Color.GREEN);
@@ -332,6 +375,9 @@ public class JarsignerConfigController extends GuiceBaseView {
 			cbAlias.setDisable( true );
 		}
 		lblConfStorepass.setVisible(true);
+		
+		clearValidationErrors();
+
 	}
 
 	@FXML
