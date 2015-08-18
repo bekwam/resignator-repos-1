@@ -44,6 +44,10 @@ import com.bekwam.resignator.model.Profile;
 
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -81,58 +85,44 @@ import javafx.util.Duration;
 public class ResignatorAppMainViewController extends GuiceBaseView {
 
     private final static Logger logger = LoggerFactory.getLogger(ResignatorAppMainViewController.class);
-
+    private final BooleanProperty needsSave = new SimpleBooleanProperty(false);
+    private final InvalidationListener needsSaveListener = (evt) -> needsSave.set(true);
     @FXML
     SplitPane sp;
-
     @FXML
     VBox console;
-
     @FXML
     TextField tfSourceFile;
-
     @FXML
     TextField tfTargetFile;
-
     @FXML
     Label lblStatus;
-
     @FXML
     ProgressIndicator piSignProgress;
-
     @FXML
     TextArea txtConsole;
-
     @FXML
     CheckBox ckReplace;
-
+    @FXML
+    MenuItem miSave;
     @Inject
     ConfigurationDataSource configurationDS;
-
     @Inject @Named("ConfigDir")
     String configDir;
-
     @Inject @Named("ConfigFile")
     String configFile;
-
     @Inject
     Provider<SettingsController> settingsControllerProvider;
-
     @Inject
     Provider<JarsignerConfigController> jarsignerConfigControllerProvider;
-    
     @Inject
     ActiveConfiguration activeConfiguration;
-    
     @Inject
     ActiveProfile activeProfile;
-
     @Inject
     Provider<SignCommand> signCommandProvider;
-
     @Inject
     Provider<UnsignCommand> unsignCommandProvider;
-
     private String jarDir = System.getProperty("user.home");
 
     @FXML
@@ -143,8 +133,13 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
             activeConfiguration.activeProfileProperty().bindBidirectional(activeProfile.profileNameProperty());
             tfSourceFile.textProperty().bindBidirectional(activeProfile.sourceFileFileNameProperty());
-            tfTargetFile.textProperty().bindBidirectional(activeProfile.targetFileFileNameProperty() );
+            tfTargetFile.textProperty().bindBidirectional(activeProfile.targetFileFileNameProperty());
             ckReplace.selectedProperty().bindBidirectional(activeProfile.replaceSignaturesProperty());
+
+            miSave.disableProperty().bind(needsSave.not());
+
+            tfSourceFile.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
+            tfTargetFile.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
 
         } catch(Exception exc) {
 
@@ -338,6 +333,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
                     Stage s = (Stage) sp.getScene().getWindow();
                     s.setTitle("ResignatorApp - " + result.get());
+
+                    needsSave.set(false);
+
                 } catch(IOException exc) {
                     logger.error( "error saving profile '" + result.get() + "'", exc );
 

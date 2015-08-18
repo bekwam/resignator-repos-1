@@ -13,7 +13,8 @@
             <items>
                   <MenuItem mnemonicParsing="false" onAction="#newProfile" text="New Profile" />
                   <MenuItem mnemonicParsing="false" onAction="#loadProfile" text="Load Profile" />
-                  <MenuItem mnemonicParsing="false" onAction="#saveProfile" text="Save Profile" />
+                <MenuItem fx:id="miSave" disable="true" mnemonicParsing="false" onAction="#saveProfile"
+                          text="Save Profile"/>
                   <MenuItem mnemonicParsing="false" onAction="#saveAsProfile" text="Save As Profile" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" onAction="#openSettings" text="Settings" />
