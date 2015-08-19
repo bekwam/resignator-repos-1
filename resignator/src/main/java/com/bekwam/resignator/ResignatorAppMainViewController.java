@@ -70,8 +70,9 @@ import static java.util.stream.Collectors.toList;
 public class ResignatorAppMainViewController extends GuiceBaseView {
 
     private final static Logger logger = LoggerFactory.getLogger(ResignatorAppMainViewController.class);
-    private final BooleanProperty needsSave = new SimpleBooleanProperty(false);
-    private final InvalidationListener needsSaveListener = (evt) -> needsSave.set(true);
+    public final BooleanProperty needsSave = new SimpleBooleanProperty(false);
+    private final InvalidationListener needsSaveListener = (evt) ->  needsSave.set(true);
+
     @FXML
     SplitPane sp;
     @FXML
@@ -290,6 +291,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         Stage s = (Stage) sp.getScene().getWindow();
         s.setTitle("ResignatorApp - " + result.get());
 
+        needsSave.set(false);  // this was just loaded
     }
 
     @FXML
@@ -347,6 +349,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
             try {
                 configurationDS.saveProfile();  // saves active profile
+
+                needsSave.set(false);
+
             } catch(IOException exc) {
                 logger.error( "error saving profile '" + activeConfiguration.activeProfileProperty().get() + "'", exc );
 
@@ -802,6 +807,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         if( StringUtils.isNotEmpty(activeConfiguration.getJDKHome()) ) {
 
             JarsignerConfigController jarsignerConfigView = jarsignerConfigControllerProvider.get();
+            jarsignerConfigView.setParent( this );
             try {
                 jarsignerConfigView.show();
             } catch (Exception exc) {

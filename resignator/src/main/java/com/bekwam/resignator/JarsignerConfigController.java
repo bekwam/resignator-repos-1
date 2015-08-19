@@ -15,25 +15,12 @@
  */
 package com.bekwam.resignator;
 
-import java.io.File;
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.bekwam.jfxbop.view.Viewable;
 import com.bekwam.resignator.commands.CommandExecutionException;
 import com.bekwam.resignator.commands.KeytoolCommand;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.google.common.base.Preconditions;
-
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.WeakInvalidationListener;
@@ -41,13 +28,7 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
@@ -55,6 +36,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.io.File;
+import java.lang.ref.WeakReference;
+import java.util.List;
 
 /**
  * Screen dedicated to gathering jarsigner.exe command info
@@ -71,6 +63,13 @@ import javafx.stage.Window;
 public class JarsignerConfigController extends GuiceBaseView {
 
     private final static Logger logger = LoggerFactory.getLogger(JarsignerConfigController.class);
+
+	private WeakReference<ResignatorAppMainViewController> parentRef;
+	private final InvalidationListener needsSaveListener = (evt) -> {
+		if( parentRef != null ) {
+			parentRef.get().needsSave.set(true);
+		}
+	};
 
 	@FXML
 	private TextField tfKeystore;
@@ -177,6 +176,11 @@ public class JarsignerConfigController extends GuiceBaseView {
 		pfConfKeypass.focusedProperty().addListener( 
 				new WeakInvalidationListener(pfConfKeypassListener)
 				);
+
+		tfKeystore.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
+		pfStorepass.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
+		pfKeypass.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
+		cbAlias.valueProperty().addListener(new WeakInvalidationListener(needsSaveListener));
 	}
 	
 	@FXML
@@ -346,7 +350,7 @@ public class JarsignerConfigController extends GuiceBaseView {
 		Preconditions.checkNotNull(pfStorepass.textProperty());
 		Preconditions.checkNotNull(pfConfStorepass.textProperty());
 
-		if( StringUtils.isBlank(pfStorepass.textProperty().getValue() ) ) {
+		if( StringUtils.isBlank(pfStorepass.textProperty().getValue()) ) {
 			
     		if( !pfStorepass.getStyleClass().contains("tf-validation-error") ) {
     			pfStorepass.getStyleClass().add("tf-validation-error");
@@ -372,7 +376,7 @@ public class JarsignerConfigController extends GuiceBaseView {
 			lblConfStorepass.setTextFill(Color.RED);
 
 			cbAlias.getItems().clear();
-			cbAlias.setDisable( true );
+			cbAlias.setDisable(true);
 		}
 		lblConfStorepass.setVisible(true);
 		
@@ -415,7 +419,18 @@ public class JarsignerConfigController extends GuiceBaseView {
 		if( new File(tfKeystore.getText()).exists() == false ) {
 			lblKeystoreNotFound.setVisible( true );
 		} else {
-			lblKeystoreNotFound.setVisible( false );
+			lblKeystoreNotFound.setVisible(false);
 		}
     }
+
+	public void setParent(ResignatorAppMainViewController parent) {
+
+		//
+		// Only setting parentRef if needed
+		//
+
+		if( this.parentRef == null || this.parentRef.get() != parent ) {
+			this.parentRef = new WeakReference<>(parent);
+		}
+	}
 }
