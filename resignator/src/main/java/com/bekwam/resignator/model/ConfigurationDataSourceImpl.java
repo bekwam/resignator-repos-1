@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -237,4 +238,35 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
 
     @Override
     public Configuration getConfiguration() { return configuration.get(); }
+
+    @Override
+    public void deleteProfile(String profileName) throws IOException {
+
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[DELETE] deleting profileName={}", profileName);
+        }
+
+        if( configuration.isPresent() ) {
+
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[DELETE] before deletion # recent={}, # profiles={}",
+                        CollectionUtils.size(configuration.get().getRecentProfiles()),
+                        CollectionUtils.size(configuration.get().getProfiles())
+                );
+            }
+
+            Profile key = new Profile(profileName, false);
+            configuration.get().getProfiles().remove(key);
+            configuration.get().getRecentProfiles().remove( profileName );
+
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[DELETE] before save # recent={}, # profiles={}",
+                        CollectionUtils.size(configuration.get().getRecentProfiles()),
+                        CollectionUtils.size(configuration.get().getProfiles())
+                );
+            }
+
+            saveConfiguration();
+        }
+    }
 }

@@ -65,4 +65,12 @@ public interface ConfigurationDataSource {
      * 
      */
     Configuration getConfiguration();
+
+    /**
+     * Removes a profile
+     *
+     * @param profileName the profile to delete
+     * @throws IOException
+     */
+    void deleteProfile(String profileName) throws IOException;
 }

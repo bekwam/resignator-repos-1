@@ -27,6 +27,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.WeakInvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -51,6 +52,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
@@ -70,45 +72,74 @@ import static java.util.stream.Collectors.toList;
 public class ResignatorAppMainViewController extends GuiceBaseView {
 
     private final static Logger logger = LoggerFactory.getLogger(ResignatorAppMainViewController.class);
+
     public final BooleanProperty needsSave = new SimpleBooleanProperty(false);
+
     private final InvalidationListener needsSaveListener = (evt) ->  needsSave.set(true);
 
     @FXML
     SplitPane sp;
+
+    @FXML
+    SplitPane outerSp;
+
     @FXML
     VBox console;
+
+    @FXML
+    VBox profileBrowser;
+
     @FXML
     TextField tfSourceFile;
+
     @FXML
     TextField tfTargetFile;
+
     @FXML
     Label lblStatus;
+
     @FXML
     ProgressIndicator piSignProgress;
+
     @FXML
     TextArea txtConsole;
+
     @FXML
     CheckBox ckReplace;
+
     @FXML
     MenuItem miSave;
+
+    @FXML
+    ListView<String> lvProfiles;
+
     @Inject
     ConfigurationDataSource configurationDS;
+
     @Inject @Named("ConfigDir")
     String configDir;
+
     @Inject @Named("ConfigFile")
     String configFile;
+
     @Inject
     Provider<SettingsController> settingsControllerProvider;
+
     @Inject
     Provider<JarsignerConfigController> jarsignerConfigControllerProvider;
+
     @Inject
     ActiveConfiguration activeConfiguration;
+
     @Inject
     ActiveProfile activeProfile;
+
     @Inject
     Provider<SignCommand> signCommandProvider;
+
     @Inject
     Provider<UnsignCommand> unsignCommandProvider;
+
     private String jarDir = System.getProperty("user.home");
 
     @FXML
@@ -126,6 +157,31 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
             tfSourceFile.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
             tfTargetFile.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
+
+            Task<Void> t = new Task<Void>() {
+
+
+                @Override
+                protected Void call() throws Exception {
+
+                    //
+                    // init profileBrowser
+                    //
+                    List<String> profileNames = configurationDS.getProfiles().
+                            stream().
+                            map(Profile::getProfileName).
+                            sorted((o1, o2) -> o1.compareTo(o2)).
+                            collect(Collectors.toList());
+
+                    Platform.runLater(() ->
+                                    lvProfiles.setItems(FXCollections.observableArrayList(profileNames))
+                    );
+
+                    return null;
+                }
+            };
+
+            new Thread(t).start();
 
         } catch(Exception exc) {
 
@@ -186,6 +242,52 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             ft.play();
 
             ft.setOnFinished( (e) -> sp.getItems().remove(console) );
+        }
+    }
+
+    @FXML
+    public void showProfileBrowser(ActionEvent evt) {
+
+        CheckMenuItem mi = (CheckMenuItem)evt.getSource();
+
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[SHOW] show={}", mi.isSelected());
+        }
+
+        if( mi.isSelected() && !outerSp.getItems().contains(profileBrowser) ) {
+            if( logger.isDebugEnabled()) {
+                logger.debug("[SHOW] adding profileBrowser region");
+            }
+
+            profileBrowser.setOpacity(0.0d);
+
+            outerSp.getItems().add(0, profileBrowser);
+            outerSp.setDividerPositions(0.3);
+
+            FadeTransition ft = new FadeTransition(Duration.millis(400), profileBrowser);
+            ft.setFromValue(0.0);
+            ft.setToValue(1.0);
+            ft.setCycleCount(1);
+            ft.setAutoReverse(false);
+            ft.play();
+
+            return;
+        }
+
+        if( !mi.isSelected() && outerSp.getItems().contains(profileBrowser)) {
+
+            if( logger.isDebugEnabled()) {
+                logger.debug("[SHOW] removing profileBrowser region");
+            }
+
+            FadeTransition ft = new FadeTransition(Duration.millis(300), profileBrowser);
+            ft.setFromValue(1.0);
+            ft.setToValue(0.1);
+            ft.setCycleCount(1);
+            ft.setAutoReverse(false);
+            ft.play();
+
+            ft.setOnFinished( (e) -> outerSp.getItems().remove(profileBrowser) );
         }
     }
 
@@ -772,7 +874,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
                     piSignProgress.setVisible(false);
 
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "JAR signing cancelle");
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "JAR signing cancelled");
                     alert.showAndWait();
                 });
 
@@ -842,5 +944,66 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
         }
     }
-    
+
+    @FXML
+    public void deleteProfile(ActionEvent evt) {
+
+        final String profileNameToDelete = lvProfiles.getSelectionModel().getSelectedItem();
+
+        if( logger.isDebugEnabled() ) {
+            logger.debug("[DELETE PROFILE] delete {}", profileNameToDelete);
+        }
+
+        Alert alert = new Alert(
+                Alert.AlertType.CONFIRMATION,
+                "Delete profile '" + profileNameToDelete + "'?");
+        alert.setHeaderText("Delete profile");
+        Optional<ButtonType> response = alert.showAndWait();
+        if (!response.isPresent() || response.get() != ButtonType.OK) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[DELETE PROFILE] delete profile cancelled");
+            }
+            return;
+        }
+
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                configurationDS.deleteProfile( profileNameToDelete );
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+
+                Platform.runLater(() -> {
+
+                    lvProfiles.getItems().remove( profileNameToDelete );
+
+                    if( StringUtils.equalsIgnoreCase( profileNameToDelete, activeProfile.getProfileName() ) ) {
+                        newProfile();
+                    }
+
+                    needsSave.set(false);
+
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Profile deleted");
+                    alert.showAndWait();
+                });
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+                Platform.runLater( () -> {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, getException().getMessage());
+                    alert.setHeaderText("Error deleting profile");
+                    alert.showAndWait();
+                });
+            }
+
+        };
+
+        new Thread(task).start();
+    }
 }

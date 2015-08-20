@@ -15,6 +15,8 @@
  */
 package com.bekwam.resignator.model;
 
+import com.google.common.base.Preconditions;
+
 import java.util.Optional;
 
 /**
@@ -29,6 +31,7 @@ public class Profile {
     private Optional<JarsignerConfig> jarsignerConfig = Optional.empty();
 
     public Profile(String profileName, Boolean replaceSignatures) {
+        Preconditions.checkNotNull( profileName );
         this.profileName = profileName;
         this.replaceSignatures = replaceSignatures;
     }
@@ -74,5 +77,21 @@ public class Profile {
                 ", jarsignerConfig=" + jarsignerConfig +
                 ", replaceSignatures=" + replaceSignatures +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Profile profile = (Profile) o;
+
+        return profileName.equals(profile.profileName);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return profileName.hashCode();
     }
 }
