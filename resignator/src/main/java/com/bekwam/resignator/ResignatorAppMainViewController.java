@@ -158,8 +158,27 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             tfSourceFile.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
             tfTargetFile.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
 
-            Task<Void> t = new Task<Void>() {
+            lvProfiles.getSelectionModel().selectedItemProperty().addListener((ov, old_v, new_v) -> {
 
+                if( needsSave.getValue() ) {
+
+                    Alert alert = new Alert(
+                            Alert.AlertType.CONFIRMATION,
+                            "Overwrite existing profile?");
+                    alert.setHeaderText("Unsaved profile");
+                    Optional<ButtonType> response = alert.showAndWait();
+                    if( !response.isPresent() || response.get() != ButtonType.OK ) {
+                        if( logger.isDebugEnabled() ) {
+                            logger.debug("[SELECT] overwrite canceled");
+                        }
+                        return;
+                    }
+                }
+
+                doLoadProfile( new_v );
+            });
+
+            Task<Void> t = new Task<Void>() {
 
                 @Override
                 protected Void call() throws Exception {
@@ -170,7 +189,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     List<String> profileNames = configurationDS.getProfiles().
                             stream().
                             map(Profile::getProfileName).
-                            sorted((o1, o2) -> o1.compareTo(o2)).
+                            sorted((o1, o2) -> o1.compareToIgnoreCase(o2)).
                             collect(Collectors.toList());
 
                     Platform.runLater(() ->
@@ -388,10 +407,14 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             logger.debug("[LOAD PROFILE] selected={}", result.get());
         }
 
-        configurationDS.loadProfile( result.get() );
+        doLoadProfile( result.get() );
+    }
+
+    private void doLoadProfile(String profileName) {
+        configurationDS.loadProfile( profileName );
 
         Stage s = (Stage) sp.getScene().getWindow();
-        s.setTitle("ResignatorApp - " + result.get());
+        s.setTitle("ResignatorApp - " + profileName);
 
         needsSave.set(false);  // this was just loaded
     }
@@ -415,18 +438,29 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             Optional<String> result = dialog.showAndWait();
 
             if( result.isPresent() ) {
-            	activeConfiguration.activeProfileProperty().set(result.get());
+                String newProfileName = result.get();
+                activeConfiguration.activeProfileProperty().set(newProfileName);
 
                 try {
                     configurationDS.saveProfile();  // saves active profile
 
                     Stage s = (Stage) sp.getScene().getWindow();
-                    s.setTitle("ResignatorApp - " + result.get());
+                    s.setTitle("ResignatorApp - " + newProfileName);
 
                     needsSave.set(false);
 
+                    int pos = 0;
+                    for( ; pos<CollectionUtils.size(lvProfiles.getItems()); pos++ ) {
+                        String pn = lvProfiles.getItems().get(pos);
+                        if( pn.compareToIgnoreCase(newProfileName) > 0 ) {
+                            break;
+                        }
+                    }
+
+                    lvProfiles.getItems().add( pos, newProfileName);
+
                 } catch(IOException exc) {
-                    logger.error( "error saving profile '" + result.get() + "'", exc );
+                    logger.error( "error saving profile '" + newProfileName + "'", exc );
 
                     Alert alert = new Alert(
                             Alert.AlertType.ERROR,
@@ -611,22 +645,26 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     	}
     	
     	boolean isValid = true;
-    	
+
     	//
     	// Validate the Source JAR field
     	//
     	
-    	if( StringUtils.isBlank(activeProfile.getSourceFileFileName() ) ) {
+    	if( StringUtils.isBlank(activeProfile.getSourceFileFileName()) ) {
 
     		if( !tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
     			tfSourceFile.getStyleClass().add("tf-validation-error");
     		}    		
     		isValid = false;
-    		
+
     	} else {
-    		
+
     		if( !new File(activeProfile.getSourceFileFileName()).exists() ) {
-    			
+
+                if( !tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
+                    tfSourceFile.getStyleClass().add("tf-validation-error");
+                }
+
                 Alert alert = new Alert(
                 		Alert.AlertType.ERROR,
                 		"Specified Source JAR does not exist"
@@ -634,51 +672,47 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 
                 alert.showAndWait();
 
-        		if( !tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
-        			tfSourceFile.getStyleClass().add("tf-validation-error");
-        		}    		
-
         		isValid = false;
     		}
     	}
-    	
+
     	//
     	// Validate the TargetJAR field
     	//
-    	
+
     	if( StringUtils.isBlank(activeProfile.getTargetFileFileName() ) ) {
     		if( !tfTargetFile.getStyleClass().contains("tf-validation-error") ) {
     			tfTargetFile.getStyleClass().add("tf-validation-error");
     		}
-    		isValid = false;    		
+    		isValid = false;
     	}
-    	
+
     	//
     	// #13 Validate the Jarsigner Config form
     	//
-    	
+
     	String jarsignerConfigField = "";
     	String jarsignerConfigMessage = "";
-    	if( StringUtils.isBlank(activeProfile.getJarsignerConfigKeystore() ) ) {
+    	if( isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigKeystore() ) ) {
     		jarsignerConfigField = "Keystore";
-    		jarsignerConfigMessage = "A keystore must be specified";        		
-    	} else if( StringUtils.isBlank(activeProfile.getJarsignerConfigStorepass() ) ) {
+    		jarsignerConfigMessage = "A keystore must be specified";
+    	} else if( isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigStorepass() ) ) {
     		jarsignerConfigField = "Storepass";
         	jarsignerConfigMessage = "A password for the keystore must be specified";
-    	} else if( StringUtils.isBlank(activeProfile.getJarsignerConfigAlias() ) ) {
+    	} else if( isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigAlias() ) ) {
         	jarsignerConfigField = "Alias";
         	jarsignerConfigMessage = "An alias for the key must be specified";
-        } else if( StringUtils.isBlank(activeProfile.getJarsignerConfigKeypass() ) ) {
+        } else if( isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigKeypass() ) ) {
         	jarsignerConfigField = "Keypass";
-    		jarsignerConfigMessage = "A password for the key must be specified";        		
+    		jarsignerConfigMessage = "A password for the key must be specified";
         }
-    	
+
     	if( StringUtils.isNotEmpty(jarsignerConfigMessage) ) {
-    	
+
     		if( logger.isDebugEnabled() ) {
     			logger.debug("[VALIDATE] jarsigner config not valid {}", jarsignerConfigMessage);
     		}
-    		
+
             Alert alert = new Alert(
                     Alert.AlertType.ERROR,
                     "Set " + jarsignerConfigField + " in Configure");
@@ -696,10 +730,10 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
             alert.getDialogPane().contentProperty().set( fp );
             alert.showAndWait();
-            
+
             isValid = false;
     	}
-    	
+
     	return isValid;
     }
     
@@ -986,9 +1020,6 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     }
 
                     needsSave.set(false);
-
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Profile deleted");
-                    alert.showAndWait();
                 });
             }
 
