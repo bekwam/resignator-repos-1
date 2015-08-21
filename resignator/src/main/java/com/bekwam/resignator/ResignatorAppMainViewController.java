@@ -1133,4 +1133,11 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
         new Thread(task).start();
     }
+
+	@Override
+	protected void postInit() throws Exception {
+		super.postInit();
+		stage.setMinHeight(600.0d);
+		stage.setMinWidth(1280.0d);
+	}    
 }
