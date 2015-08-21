@@ -158,12 +158,12 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
                     Alert alert = new Alert(
                             Alert.AlertType.CONFIRMATION,
-                            "Overwrite existing profile?");
+                            "Discard unsaved profile?");
                     alert.setHeaderText("Unsaved profile");
                     Optional<ButtonType> response = alert.showAndWait();
                     if (!response.isPresent() || response.get() != ButtonType.OK) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("[SELECT] overwrite canceled");
+                            logger.debug("[SELECT] discard canceled");
                         }
                         return;
                     }
@@ -467,6 +467,18 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
             if( result.isPresent() ) {
                 String newProfileName = result.get();
+
+                if (configurationDS.profileExists(newProfileName)) {
+                    Alert alert = new Alert(
+                            Alert.AlertType.CONFIRMATION,
+                            "Overwrite existing profile?");
+                    alert.setHeaderText("Profile exists");
+                    Optional<ButtonType> response = alert.showAndWait();
+                    if (!response.isPresent() || response.get() != ButtonType.OK) {
+                        return;
+                    }
+                }
+
                 activeConfiguration.activeProfileProperty().set(newProfileName);
 
                 try {
@@ -523,15 +535,17 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     }
 
     private void addToProfileBrowser(String newProfileName) {
-        int pos = 0;
-        for (; pos < CollectionUtils.size(lvProfiles.getItems()); pos++) {
-            String pn = lvProfiles.getItems().get(pos);
-            if (pn.compareToIgnoreCase(newProfileName) > 0) {
-                break;
+
+        if (!lvProfiles.getItems().contains(newProfileName)) {
+            int pos = 0;
+            for (; pos < CollectionUtils.size(lvProfiles.getItems()); pos++) {
+                String pn = lvProfiles.getItems().get(pos);
+                if (pn.compareToIgnoreCase(newProfileName) > 0) {
+                    lvProfiles.getItems().add(pos, newProfileName);
+                    break;
+                }
             }
         }
-
-        lvProfiles.getItems().add(pos, newProfileName);
     }
 
     void recordRecentProfile(String newProfileName) {
@@ -606,6 +620,17 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     if( logger.isDebugEnabled() ) {
                         logger.debug("[SAVE AS] overwrite canceled");
                     }
+                    return;
+                }
+            }
+
+            if (configurationDS.profileExists(profileName)) {
+                Alert alert = new Alert(
+                        Alert.AlertType.CONFIRMATION,
+                        "Overwrite existing profile?");
+                alert.setHeaderText("Profile exists");
+                Optional<ButtonType> response = alert.showAndWait();
+                if (!response.isPresent() || response.get() != ButtonType.OK) {
                     return;
                 }
             }

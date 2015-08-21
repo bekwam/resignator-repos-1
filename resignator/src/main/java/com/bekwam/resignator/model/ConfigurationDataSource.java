@@ -73,4 +73,12 @@ public interface ConfigurationDataSource {
      * @throws IOException
      */
     void deleteProfile(String profileName) throws IOException;
+
+    /**
+     * Checks if a profile exists already
+     *
+     * @param profileName the profile to check
+     * @throws IOException
+     */
+    boolean profileExists(String profileName);
 }

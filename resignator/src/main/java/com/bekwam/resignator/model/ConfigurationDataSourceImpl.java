@@ -268,4 +268,18 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
             saveConfiguration();
         }
     }
+
+    @Override
+    public boolean profileExists(String profileName) {
+        boolean exists = false;
+        if (configuration.isPresent()) {
+            for (Profile p : configuration.get().getProfiles()) {
+                if (StringUtils.equalsIgnoreCase(p.getProfileName(), profileName)) {
+                    exists = true;
+                    break;
+                }
+            }
+        }
+        return exists;
+    }
 }
