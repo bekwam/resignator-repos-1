@@ -1,8 +1,5 @@
 package com.bekwam.resignator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.bekwam.jfxbop.data.ManagedDataSource;
 import com.bekwam.jfxbop.data.ManagedDataSourceInterceptor;
 import com.bekwam.resignator.model.ConfigurationDataSource;
@@ -10,9 +7,10 @@ import com.bekwam.resignator.model.ConfigurationDataSourceImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
-
 import javafx.fxml.JavaFXBuilderFactory;
 import javafx.util.BuilderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by carl_000 on 6/29/2015.
@@ -23,6 +21,7 @@ public class ResignatorModule extends AbstractModule {
 
     private final static String CONFIG_DIR = ".resignator";
     private final static String CONFIG_FILE = "resignator.json";
+    private final static Integer NUM_RECENT_PROFILES = 4;
 
     @Override
     protected void configure() {
@@ -37,6 +36,8 @@ public class ResignatorModule extends AbstractModule {
 
         bind(String.class).annotatedWith(Names.named("ConfigDir")).toInstance(CONFIG_DIR);
         bind(String.class).annotatedWith(Names.named("ConfigFile")).toInstance(CONFIG_FILE);
+        bind(Integer.class).annotatedWith(Names.named("NumRecentProfiles")).toInstance(NUM_RECENT_PROFILES);
+
         bind(ConfigurationDataSource.class).to(ConfigurationDataSourceImpl.class);
     }
 }

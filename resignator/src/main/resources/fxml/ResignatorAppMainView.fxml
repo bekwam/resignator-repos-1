@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
+<VBox xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+      minWidth="-Infinity" xmlns="http://javafx.com/javafx/8"
+      fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
    <children>
       <MenuBar VBox.vgrow="NEVER">
         <menus>
@@ -13,6 +13,12 @@
             <items>
                   <MenuItem mnemonicParsing="false" onAction="#newProfile" text="New Profile" />
                   <MenuItem mnemonicParsing="false" onAction="#loadProfile" text="Load Profile" />
+                <Menu fx:id="mRecentProfiles" mnemonicParsing="false" text="Recent Profiles">
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="&lt; None &gt;"/>
+                    </items>
+                </Menu>
+                <SeparatorMenuItem mnemonicParsing="false"/>
                 <MenuItem fx:id="miSave" disable="true" mnemonicParsing="false" onAction="#saveProfile" text="Save Profile" />
                   <MenuItem mnemonicParsing="false" onAction="#saveAsProfile" text="Save As Profile" />
                   <SeparatorMenuItem mnemonicParsing="false" />

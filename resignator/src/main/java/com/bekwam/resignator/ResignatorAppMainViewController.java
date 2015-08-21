@@ -30,6 +30,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
@@ -50,6 +51,7 @@ import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -76,46 +78,36 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     public final BooleanProperty needsSave = new SimpleBooleanProperty(false);
 
     private final InvalidationListener needsSaveListener = (evt) ->  needsSave.set(true);
-
+    private final MenuItem MI_NO_PROFILES = new MenuItem("< None >");
     @FXML
     SplitPane sp;
-
     @FXML
     SplitPane outerSp;
-
     @FXML
     VBox console;
-
     @FXML
     VBox profileBrowser;
-
     @FXML
     TextField tfSourceFile;
-
     @FXML
     TextField tfTargetFile;
-
     @FXML
     Label lblStatus;
-
     @FXML
     ProgressIndicator piSignProgress;
-
     @FXML
     TextArea txtConsole;
-
     @FXML
     CheckBox ckReplace;
-
     @FXML
     MenuItem miSave;
-
     @FXML
     ListView<String> lvProfiles;
-
+    @FXML
+    Menu mRecentProfiles;
     @Inject
     ConfigurationDataSource configurationDS;
-
+    private final EventHandler<ActionEvent> recentProfileLoadHandler = (evt) -> doLoadProfile(((MenuItem) evt.getSource()).getText());
     @Inject @Named("ConfigDir")
     String configDir;
 
@@ -140,14 +132,16 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @Inject
     Provider<UnsignCommand> unsignCommandProvider;
 
+    @Inject
+    @Named("NumRecentProfiles")
+    Integer numRecentProfiles = 4;
+
     private String jarDir = System.getProperty("user.home");
 
     @FXML
     public void initialize() {
 
         try {
-            configurationDS.loadConfiguration();
-
             activeConfiguration.activeProfileProperty().bindBidirectional(activeProfile.profileNameProperty());
             tfSourceFile.textProperty().bindBidirectional(activeProfile.sourceFileFileNameProperty());
             tfTargetFile.textProperty().bindBidirectional(activeProfile.targetFileFileNameProperty());
@@ -160,22 +154,22 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
             lvProfiles.getSelectionModel().selectedItemProperty().addListener((ov, old_v, new_v) -> {
 
-                if( needsSave.getValue() ) {
+                if (needsSave.getValue()) {
 
                     Alert alert = new Alert(
                             Alert.AlertType.CONFIRMATION,
                             "Overwrite existing profile?");
                     alert.setHeaderText("Unsaved profile");
                     Optional<ButtonType> response = alert.showAndWait();
-                    if( !response.isPresent() || response.get() != ButtonType.OK ) {
-                        if( logger.isDebugEnabled() ) {
+                    if (!response.isPresent() || response.get() != ButtonType.OK) {
+                        if (logger.isDebugEnabled()) {
                             logger.debug("[SELECT] overwrite canceled");
                         }
                         return;
                     }
                 }
 
-                doLoadProfile( new_v );
+                doLoadProfile(new_v);
             });
 
             Task<Void> t = new Task<Void>() {
@@ -183,22 +177,56 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 @Override
                 protected Void call() throws Exception {
 
+                    updateMessage("Loading configuration");
+                    configurationDS.loadConfiguration();
+
                     //
                     // init profileBrowser
                     //
-                    List<String> profileNames = configurationDS.getProfiles().
+                    final List<String> profileNames = configurationDS.getProfiles().
                             stream().
                             map(Profile::getProfileName).
                             sorted((o1, o2) -> o1.compareToIgnoreCase(o2)).
                             collect(Collectors.toList());
 
-                    Platform.runLater(() ->
-                                    lvProfiles.setItems(FXCollections.observableArrayList(profileNames))
-                    );
+                    final List<String> recentProfiles = configurationDS.getRecentProfileNames();
+
+                    Platform.runLater(() -> {
+                        lvProfiles.setItems(FXCollections.observableArrayList(profileNames));
+
+                        if (CollectionUtils.isNotEmpty(recentProfiles)) {
+                            mRecentProfiles.getItems().clear();
+                            mRecentProfiles.getItems().addAll(FXCollections.observableArrayList(
+                                    recentProfiles.stream().
+                                            map((s) -> new MenuItem(s)).
+                                            collect(Collectors.toList())
+                            ));
+                        }
+                    });
 
                     return null;
                 }
+
+                @Override
+                protected void succeeded() {
+                    super.succeeded();
+                    updateMessage("");
+                }
+
+                @Override
+                protected void cancelled() {
+                    super.cancelled();
+                    updateMessage("");
+                }
+
+                @Override
+                protected void failed() {
+                    super.failed();
+                    updateMessage("");
+                }
             };
+
+            lblStatus.textProperty().bind(t.messageProperty());
 
             new Thread(t).start();
 
@@ -442,6 +470,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 activeConfiguration.activeProfileProperty().set(newProfileName);
 
                 try {
+                    recordRecentProfile(newProfileName);  // #18
                     configurationDS.saveProfile();  // saves active profile
 
                     Stage s = (Stage) sp.getScene().getWindow();
@@ -449,15 +478,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
                     needsSave.set(false);
 
-                    int pos = 0;
-                    for( ; pos<CollectionUtils.size(lvProfiles.getItems()); pos++ ) {
-                        String pn = lvProfiles.getItems().get(pos);
-                        if( pn.compareToIgnoreCase(newProfileName) > 0 ) {
-                            break;
-                        }
-                    }
-
-                    lvProfiles.getItems().add( pos, newProfileName);
+                    addToProfileBrowser(newProfileName);
 
                 } catch(IOException exc) {
                     logger.error( "error saving profile '" + newProfileName + "'", exc );
@@ -484,8 +505,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             }
 
             try {
+                recordRecentProfile(activeProfile.getProfileName());  // #18
                 configurationDS.saveProfile();  // saves active profile
-
                 needsSave.set(false);
 
             } catch(IOException exc) {
@@ -501,6 +522,63 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         }
     }
 
+    private void addToProfileBrowser(String newProfileName) {
+        int pos = 0;
+        for (; pos < CollectionUtils.size(lvProfiles.getItems()); pos++) {
+            String pn = lvProfiles.getItems().get(pos);
+            if (pn.compareToIgnoreCase(newProfileName) > 0) {
+                break;
+            }
+        }
+
+        lvProfiles.getItems().add(pos, newProfileName);
+    }
+
+    void recordRecentProfile(String newProfileName) {
+
+        //
+        // #18 record recent history on save
+        //
+        List<MenuItem> rpItems = mRecentProfiles.getItems();
+        MenuItem rpItem = new MenuItem(newProfileName);
+        rpItem.setOnAction(recentProfileLoadHandler);
+
+        if (CollectionUtils.isNotEmpty(rpItems)) {
+            if (CollectionUtils.size(rpItems) == 1) {
+                if (StringUtils.equalsIgnoreCase(rpItems.get(0).getText(), MI_NO_PROFILES.getText())) {
+                    rpItems.set(0, rpItem);
+                } else {
+                    rpItems.add(0, rpItem);
+                }
+            } else {
+                rpItems.add(0, rpItem);
+                if (CollectionUtils.size(rpItems) > numRecentProfiles) {
+                    for (int i = (CollectionUtils.size(rpItems) - 1); i >= numRecentProfiles; i--) {
+                        rpItems.remove(i);
+                    }
+                }
+            }
+        } else {
+            // should never have no items (at least one < None >)
+            rpItems.add(rpItem);
+        }
+
+        // reconcile with active record
+        activeConfiguration.getRecentProfiles().clear();
+        if (!(CollectionUtils.size(rpItems) == 1 &&
+                StringUtils.equalsIgnoreCase(rpItems.get(0).getText(), MI_NO_PROFILES.getText()))
+                ) {
+            // there's more than just a < None > element
+            activeConfiguration.setRecentProfiles(
+                    rpItems.
+                            stream().
+                            map((mi) -> mi.getText()).
+                            collect(Collectors.toList())
+            );
+        }
+        // end #18
+    }
+
     @FXML
     public void saveAsProfile() {
 
@@ -514,13 +592,14 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             //
             // Check for uniqueness; prompt for overwrite
             //
-            if( profileNameInUse(result.get()) ) {
+            final String profileName = result.get();
+            if (profileNameInUse(profileName)) {
                 if( logger.isDebugEnabled() ) {
                     logger.debug("[SAVE AS] profile name in use; prompt for overwrite");
                 }
                 Alert alert = new Alert(
                         Alert.AlertType.CONFIRMATION,
-                        "Overwrite existing profile '" + result.get() + "'?");
+                        "Overwrite existing profile '" + profileName + "'?");
                 alert.setHeaderText("Profile name in use");
                 Optional<ButtonType> response = alert.showAndWait();
                 if( !response.isPresent() || response.get() != ButtonType.OK ) {
@@ -531,16 +610,21 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 }
             }
 
-            activeConfiguration.activeProfileProperty().set(result.get());  // activeProfile object tweaked w. new name
+            activeConfiguration.activeProfileProperty().set(profileName);  // activeProfile object tweaked w. new name
 
             try {
+                recordRecentProfile(activeProfile.getProfileName());  // #18
                 configurationDS.saveProfile();
 
                 Stage s = (Stage) sp.getScene().getWindow();
-                s.setTitle("ResignatorApp - " + result.get());
+                s.setTitle("ResignatorApp - " + profileName);
+
+                needsSave.set(false);
+
+                addToProfileBrowser(profileName);
 
             } catch(IOException exc) {
-                logger.error( "error saving profile '" + result.get() + "'", exc );
+                logger.error("error saving profile '" + profileName + "'", exc);
 
                 Alert alert = new Alert(
                         Alert.AlertType.ERROR,
@@ -1012,6 +1096,18 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 super.succeeded();
 
                 Platform.runLater(() -> {
+
+                    // #18 recent profiles
+                    Iterator<MenuItem> iterator = mRecentProfiles.getItems().iterator();
+                    while (iterator.hasNext()) {
+                        MenuItem mi = iterator.next();
+                        if (StringUtils.equalsIgnoreCase(mi.getText(), profileNameToDelete)) {
+                            iterator.remove();
+                        }
+                    }
+                    if (CollectionUtils.isEmpty(mRecentProfiles.getItems())) {
+                        mRecentProfiles.getItems().add(MI_NO_PROFILES);
+                    }
 
                     lvProfiles.getItems().remove( profileNameToDelete );
 

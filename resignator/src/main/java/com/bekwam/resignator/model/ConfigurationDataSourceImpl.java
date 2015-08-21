@@ -133,12 +133,11 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
 
     @Override
     public List<String> getRecentProfileNames() {
-        return null;
+        return configuration.get().getRecentProfiles();
     }
 
     @Override
     public List<Profile> getProfiles() {
-
         return configuration.get().getProfiles();
     }
 
