@@ -81,4 +81,23 @@ public interface ConfigurationDataSource {
      * @throws IOException
      */
     boolean profileExists(String profileName);
+
+    /**
+     * Renames a profile
+     *
+     * @param oldProfileName the profile to rename
+     * @param newProfileName the new profile name
+     * @throws IOException
+     */
+    void renameProfile(String oldProfileName, String newProfileName) throws IOException;
+
+    /**
+     * Suggest unique profile name
+     *
+     * @param profileName
+     * @return unique profile name
+     * @throws IOException
+     */
+    String suggestUniqueProfileName(String profileName);
+
 }

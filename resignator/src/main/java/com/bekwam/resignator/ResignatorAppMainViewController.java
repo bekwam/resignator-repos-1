@@ -33,6 +33,8 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldListCell;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -51,6 +53,7 @@ import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -77,7 +80,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
     public final BooleanProperty needsSave = new SimpleBooleanProperty(false);
 
-    private final InvalidationListener needsSaveListener = (evt) ->  needsSave.set(true);
+    private final InvalidationListener needsSaveListener = (evt) -> needsSave.set(true);
     private final MenuItem MI_NO_PROFILES = new MenuItem("< None >");
     @FXML
     SplitPane sp;
@@ -108,10 +111,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @Inject
     ConfigurationDataSource configurationDS;
     private final EventHandler<ActionEvent> recentProfileLoadHandler = (evt) -> doLoadProfile(((MenuItem) evt.getSource()).getText());
-    @Inject @Named("ConfigDir")
-    String configDir;
 
-    @Inject @Named("ConfigFile")
+    @Inject
+    @Named("ConfigFile")
     String configFile;
 
     @Inject
@@ -154,6 +156,10 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
             lvProfiles.getSelectionModel().selectedItemProperty().addListener((ov, old_v, new_v) -> {
 
+                if (new_v == null) {  // coming from clearSelection or sort
+                    return;
+                }
+
                 if (needsSave.getValue()) {
 
                     Alert alert = new Alert(
@@ -169,8 +175,13 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     }
                 }
 
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[SELECT] nv={}", new_v);
+                }
                 doLoadProfile(new_v);
             });
+
+            lvProfiles.setCellFactory(TextFieldListCell.forListView());
 
             Task<Void> t = new Task<Void>() {
 
@@ -230,7 +241,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
             new Thread(t).start();
 
-        } catch(Exception exc) {
+        } catch (Exception exc) {
 
             logger.error("can't load configuration", exc);
 
@@ -250,14 +261,14 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     public void showConsole(ActionEvent evt) {
 
-        CheckMenuItem mi = (CheckMenuItem)evt.getSource();
+        CheckMenuItem mi = (CheckMenuItem) evt.getSource();
 
-        if( logger.isDebugEnabled() ) {
+        if (logger.isDebugEnabled()) {
             logger.debug("[SHOW] show={}", mi.isSelected());
         }
 
-        if( mi.isSelected() && !sp.getItems().contains(console) ) {
-            if( logger.isDebugEnabled()) {
+        if (mi.isSelected() && !sp.getItems().contains(console)) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("[SHOW] adding console region");
             }
 
@@ -275,9 +286,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             return;
         }
 
-        if( !mi.isSelected() && sp.getItems().contains(console)) {
+        if (!mi.isSelected() && sp.getItems().contains(console)) {
 
-            if( logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("[SHOW] removing console region");
             }
 
@@ -288,21 +299,21 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             ft.setAutoReverse(false);
             ft.play();
 
-            ft.setOnFinished( (e) -> sp.getItems().remove(console) );
+            ft.setOnFinished((e) -> sp.getItems().remove(console));
         }
     }
 
     @FXML
     public void showProfileBrowser(ActionEvent evt) {
 
-        CheckMenuItem mi = (CheckMenuItem)evt.getSource();
+        CheckMenuItem mi = (CheckMenuItem) evt.getSource();
 
-        if( logger.isDebugEnabled() ) {
+        if (logger.isDebugEnabled()) {
             logger.debug("[SHOW] show={}", mi.isSelected());
         }
 
-        if( mi.isSelected() && !outerSp.getItems().contains(profileBrowser) ) {
-            if( logger.isDebugEnabled()) {
+        if (mi.isSelected() && !outerSp.getItems().contains(profileBrowser)) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("[SHOW] adding profileBrowser region");
             }
 
@@ -321,9 +332,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             return;
         }
 
-        if( !mi.isSelected() && outerSp.getItems().contains(profileBrowser)) {
+        if (!mi.isSelected() && outerSp.getItems().contains(profileBrowser)) {
 
-            if( logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("[SHOW] removing profileBrowser region");
             }
 
@@ -334,7 +345,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             ft.setAutoReverse(false);
             ft.play();
 
-            ft.setOnFinished( (e) -> outerSp.getItems().remove(profileBrowser) );
+            ft.setOnFinished((e) -> outerSp.getItems().remove(profileBrowser));
         }
     }
 
@@ -351,7 +362,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     public void newProfile() {
 
-        if( logger.isDebugEnabled() ) {
+        if (logger.isDebugEnabled()) {
             logger.debug("[LOAD PROFILE]");
         }
 
@@ -364,7 +375,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     public void loadProfile() {
 
-        if( logger.isDebugEnabled() ) {
+        if (logger.isDebugEnabled()) {
             logger.debug("[LOAD PROFILE]");
         }
 
@@ -376,15 +387,15 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         piSignProgress.setProgress(0.0d);
         piSignProgress.setVisible(false);
         clearValidationErrors();
-        
+
         //
         // Get profiles from loaded Configuration object
         //
         List<Profile> profiles = configurationDS.getProfiles();
 
-        if( CollectionUtils.isEmpty(profiles) ) {
+        if (CollectionUtils.isEmpty(profiles)) {
 
-            if(logger.isDebugEnabled() ) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("[LOAD PROFILE] no profiles");
             }
 
@@ -414,11 +425,11 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         //
         // Prompt user for selection - default is first item
         //
-        if( StringUtils.isNotEmpty(activeConfiguration.activeProfileProperty().getValue()) ) {
+        if (StringUtils.isNotEmpty(activeConfiguration.activeProfileProperty().getValue())) {
             defaultProfileName = activeConfiguration.activeProfileProperty().getValue();
         }
 
-        if( logger.isDebugEnabled() ) {
+        if (logger.isDebugEnabled()) {
             logger.debug("[LOAD PROFILE] default profileName={}", defaultProfileName);
         }
 
@@ -427,19 +438,19 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         dialog.setHeaderText("Select profile ");
         Optional<String> result = dialog.showAndWait();
 
-        if( !result.isPresent() ) {
+        if (!result.isPresent()) {
             return; // cancel
         }
 
-        if( logger.isDebugEnabled() ) {
+        if (logger.isDebugEnabled()) {
             logger.debug("[LOAD PROFILE] selected={}", result.get());
         }
 
-        doLoadProfile( result.get() );
+        doLoadProfile(result.get());
     }
 
     private void doLoadProfile(String profileName) {
-        configurationDS.loadProfile( profileName );
+        configurationDS.loadProfile(profileName);
 
         Stage s = (Stage) sp.getScene().getWindow();
         s.setTitle("ResignatorApp - " + profileName);
@@ -450,13 +461,13 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @FXML
     public void saveProfile() {
 
-        if( logger.isDebugEnabled() ){
+        if (logger.isDebugEnabled()) {
             logger.debug("[SAVE PROFILE]");
         }
 
-        if( activeConfiguration.activeProfileProperty().isEmpty().get() ) {
+        if (activeConfiguration.activeProfileProperty().isEmpty().get()) {
 
-            if( logger.isDebugEnabled() ){
+            if (logger.isDebugEnabled()) {
                 logger.debug("[SAVE PROFILE] activeProfileName is empty");
             }
 
@@ -465,7 +476,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             dialog.setHeaderText("Enter profile name");
             Optional<String> result = dialog.showAndWait();
 
-            if( result.isPresent() ) {
+            if (result.isPresent()) {
                 String newProfileName = result.get();
 
                 if (configurationDS.profileExists(newProfileName)) {
@@ -492,8 +503,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
                     addToProfileBrowser(newProfileName);
 
-                } catch(IOException exc) {
-                    logger.error( "error saving profile '" + newProfileName + "'", exc );
+                } catch (IOException exc) {
+                    logger.error("error saving profile '" + newProfileName + "'", exc);
 
                     Alert alert = new Alert(
                             Alert.AlertType.ERROR,
@@ -512,7 +523,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             }
         } else { // just save
 
-            if( logger.isDebugEnabled() ){
+            if (logger.isDebugEnabled()) {
                 logger.debug("[SAVE PROFILE] there is an active profile");
             }
 
@@ -521,8 +532,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 configurationDS.saveProfile();  // saves active profile
                 needsSave.set(false);
 
-            } catch(IOException exc) {
-                logger.error( "error saving profile '" + activeConfiguration.activeProfileProperty().get() + "'", exc );
+            } catch (IOException exc) {
+                logger.error("error saving profile '" + activeConfiguration.activeProfileProperty().get() + "'", exc);
 
                 Alert alert = new Alert(
                         Alert.AlertType.ERROR,
@@ -535,16 +546,15 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     }
 
     private void addToProfileBrowser(String newProfileName) {
-
         if (!lvProfiles.getItems().contains(newProfileName)) {
             int pos = 0;
             for (; pos < CollectionUtils.size(lvProfiles.getItems()); pos++) {
                 String pn = lvProfiles.getItems().get(pos);
                 if (pn.compareToIgnoreCase(newProfileName) > 0) {
-                    lvProfiles.getItems().add(pos, newProfileName);
                     break;
                 }
             }
+            lvProfiles.getItems().add(pos, newProfileName);
         }
     }
 
@@ -601,14 +611,14 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         dialog.setHeaderText("Enter profile name");
         Optional<String> result = dialog.showAndWait();
 
-        if( result.isPresent() ) {
+        if (result.isPresent()) {
 
             //
             // Check for uniqueness; prompt for overwrite
             //
             final String profileName = result.get();
             if (profileNameInUse(profileName)) {
-                if( logger.isDebugEnabled() ) {
+                if (logger.isDebugEnabled()) {
                     logger.debug("[SAVE AS] profile name in use; prompt for overwrite");
                 }
                 Alert alert = new Alert(
@@ -616,8 +626,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                         "Overwrite existing profile '" + profileName + "'?");
                 alert.setHeaderText("Profile name in use");
                 Optional<ButtonType> response = alert.showAndWait();
-                if( !response.isPresent() || response.get() != ButtonType.OK ) {
-                    if( logger.isDebugEnabled() ) {
+                if (!response.isPresent() || response.get() != ButtonType.OK) {
+                    if (logger.isDebugEnabled()) {
                         logger.debug("[SAVE AS] overwrite canceled");
                     }
                     return;
@@ -648,7 +658,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
                 addToProfileBrowser(profileName);
 
-            } catch(IOException exc) {
+            } catch (IOException exc) {
                 logger.error("error saving profile '" + profileName + "'", exc);
 
                 Alert alert = new Alert(
@@ -678,12 +688,12 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
     @FXML
     public void browseSource() {
-        if( logger.isDebugEnabled() ){
+        if (logger.isDebugEnabled()) {
             logger.debug("[BROWSE SOURCE]");
         }
 
         clearValidationErrors();
-        
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Source JAR");
         fileChooser.setInitialDirectory(new File(jarDir));
@@ -692,8 +702,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         );
 
         File f = fileChooser.showOpenDialog(stage);
-        if( f != null ) {
-            if( logger.isDebugEnabled() ) {
+        if (f != null) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("[BROWSE SOURCE] selected file={}", f.getAbsolutePath());
             }
             tfSourceFile.setText(f.getAbsolutePath());
@@ -704,12 +714,12 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
     @FXML
     public void browseTarget() {
-        if( logger.isDebugEnabled() ){
+        if (logger.isDebugEnabled()) {
             logger.debug("[BROWSE TARGET]");
         }
 
         clearValidationErrors();
-        
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Target JAR");
         fileChooser.setInitialDirectory(new File(jarDir));
@@ -718,11 +728,11 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         );
 
         File f = fileChooser.showOpenDialog(stage);
-        if( f != null ) {
-            if( logger.isDebugEnabled() ) {
+        if (f != null) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("[BROWSE TARGET] selected file={}", f.getAbsolutePath());
             }
-            tfTargetFile.setText( f.getAbsolutePath() );
+            tfTargetFile.setText(f.getAbsolutePath());
 
             jarDir = FilenameUtils.getFullPath(f.getAbsolutePath());
         }
@@ -730,7 +740,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
     @FXML
     public void copySourceToTarget() {
-        if( logger.isDebugEnabled() ){
+        if (logger.isDebugEnabled()) {
             logger.debug("[COPY SOURCE TO TARGET]");
         }
         clearValidationErrors();
@@ -739,88 +749,88 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
     @FXML
     public void clearValidationErrors() {
-    	if( tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
-    		tfSourceFile.getStyleClass().remove("tf-validation-error");
-    	}
-    	if( tfTargetFile.getStyleClass().contains("tf-validation-error") ) {
-    		tfTargetFile.getStyleClass().remove("tf-validation-error");
-    	}
+        if (tfSourceFile.getStyleClass().contains("tf-validation-error")) {
+            tfSourceFile.getStyleClass().remove("tf-validation-error");
+        }
+        if (tfTargetFile.getStyleClass().contains("tf-validation-error")) {
+            tfTargetFile.getStyleClass().remove("tf-validation-error");
+        }
     }
-    
+
     private boolean validateSign() {
-    
-    	if( logger.isDebugEnabled() ) {
-    		logger.debug("[VALIDATE]");
-    	}
-    	
-    	boolean isValid = true;
 
-    	//
-    	// Validate the Source JAR field
-    	//
-    	
-    	if( StringUtils.isBlank(activeProfile.getSourceFileFileName()) ) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("[VALIDATE]");
+        }
 
-    		if( !tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
-    			tfSourceFile.getStyleClass().add("tf-validation-error");
-    		}    		
-    		isValid = false;
+        boolean isValid = true;
 
-    	} else {
+        //
+        // Validate the Source JAR field
+        //
 
-    		if( !new File(activeProfile.getSourceFileFileName()).exists() ) {
+        if (StringUtils.isBlank(activeProfile.getSourceFileFileName())) {
 
-                if( !tfSourceFile.getStyleClass().contains("tf-validation-error") ) {
+            if (!tfSourceFile.getStyleClass().contains("tf-validation-error")) {
+                tfSourceFile.getStyleClass().add("tf-validation-error");
+            }
+            isValid = false;
+
+        } else {
+
+            if (!new File(activeProfile.getSourceFileFileName()).exists()) {
+
+                if (!tfSourceFile.getStyleClass().contains("tf-validation-error")) {
                     tfSourceFile.getStyleClass().add("tf-validation-error");
                 }
 
                 Alert alert = new Alert(
-                		Alert.AlertType.ERROR,
-                		"Specified Source JAR does not exist"
-                		);
-                
+                        Alert.AlertType.ERROR,
+                        "Specified Source JAR does not exist"
+                );
+
                 alert.showAndWait();
 
-        		isValid = false;
-    		}
-    	}
-
-    	//
-    	// Validate the TargetJAR field
-    	//
-
-    	if( StringUtils.isBlank(activeProfile.getTargetFileFileName() ) ) {
-    		if( !tfTargetFile.getStyleClass().contains("tf-validation-error") ) {
-    			tfTargetFile.getStyleClass().add("tf-validation-error");
-    		}
-    		isValid = false;
-    	}
-
-    	//
-    	// #13 Validate the Jarsigner Config form
-    	//
-
-    	String jarsignerConfigField = "";
-    	String jarsignerConfigMessage = "";
-    	if( isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigKeystore() ) ) {
-    		jarsignerConfigField = "Keystore";
-    		jarsignerConfigMessage = "A keystore must be specified";
-    	} else if( isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigStorepass() ) ) {
-    		jarsignerConfigField = "Storepass";
-        	jarsignerConfigMessage = "A password for the keystore must be specified";
-    	} else if( isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigAlias() ) ) {
-        	jarsignerConfigField = "Alias";
-        	jarsignerConfigMessage = "An alias for the key must be specified";
-        } else if( isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigKeypass() ) ) {
-        	jarsignerConfigField = "Keypass";
-    		jarsignerConfigMessage = "A password for the key must be specified";
+                isValid = false;
+            }
         }
 
-    	if( StringUtils.isNotEmpty(jarsignerConfigMessage) ) {
+        //
+        // Validate the TargetJAR field
+        //
 
-    		if( logger.isDebugEnabled() ) {
-    			logger.debug("[VALIDATE] jarsigner config not valid {}", jarsignerConfigMessage);
-    		}
+        if (StringUtils.isBlank(activeProfile.getTargetFileFileName())) {
+            if (!tfTargetFile.getStyleClass().contains("tf-validation-error")) {
+                tfTargetFile.getStyleClass().add("tf-validation-error");
+            }
+            isValid = false;
+        }
+
+        //
+        // #13 Validate the Jarsigner Config form
+        //
+
+        String jarsignerConfigField = "";
+        String jarsignerConfigMessage = "";
+        if (isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigKeystore())) {
+            jarsignerConfigField = "Keystore";
+            jarsignerConfigMessage = "A keystore must be specified";
+        } else if (isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigStorepass())) {
+            jarsignerConfigField = "Storepass";
+            jarsignerConfigMessage = "A password for the keystore must be specified";
+        } else if (isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigAlias())) {
+            jarsignerConfigField = "Alias";
+            jarsignerConfigMessage = "An alias for the key must be specified";
+        } else if (isValid && StringUtils.isBlank(activeProfile.getJarsignerConfigKeypass())) {
+            jarsignerConfigField = "Keypass";
+            jarsignerConfigMessage = "A password for the key must be specified";
+        }
+
+        if (StringUtils.isNotEmpty(jarsignerConfigMessage)) {
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[VALIDATE] jarsigner config not valid {}", jarsignerConfigMessage);
+            }
 
             Alert alert = new Alert(
                     Alert.AlertType.ERROR,
@@ -830,40 +840,40 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             FlowPane fp = new FlowPane();
             Label lbl = new Label("Set " + jarsignerConfigField + " in ");
             Hyperlink link = new Hyperlink("Configure");
-            fp.getChildren().addAll( lbl, link);
+            fp.getChildren().addAll(lbl, link);
 
-            link.setOnAction( (evt) -> {
+            link.setOnAction((evt) -> {
                 alert.close();
                 openJarsignerConfig();
-            } );
+            });
 
-            alert.getDialogPane().contentProperty().set( fp );
+            alert.getDialogPane().contentProperty().set(fp);
             alert.showAndWait();
 
             isValid = false;
-    	}
+        }
 
-    	return isValid;
+        return isValid;
     }
-    
+
     @FXML
     public void sign() {
 
-        if( logger.isDebugEnabled() ) {
+        if (logger.isDebugEnabled()) {
             logger.debug("[SIGN] activeProfile sourceFile={}, targetFile={}",
                     activeProfile.getSourceFileFileName(),
-                    activeProfile.getTargetFileFileName() );
+                    activeProfile.getTargetFileFileName());
         }
 
         boolean isValid = validateSign();
-        
-        if( !isValid ) {
-        	if( logger.isDebugEnabled() ) {
-        		logger.debug("[SIGN] form not valid; returning");
-        	}
-        	return;
+
+        if (!isValid) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[SIGN] form not valid; returning");
+            }
+            return;
         }
-        
+
         final Boolean doUnsign = ckReplace.isSelected();
 
         //
@@ -883,13 +893,13 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             }
         } else {
 
-        	//
-        	// #6 sign-only to a different target filename needs a copy and
-        	// possible overwrite
-        	//
-        	
-        	File tf = new File(activeProfile.getTargetFileFileName());
-        	if( tf.exists() ) {
+            //
+            // #6 sign-only to a different target filename needs a copy and
+            // possible overwrite
+            //
+
+            File tf = new File(activeProfile.getTargetFileFileName());
+            if (tf.exists()) {
                 Alert alert = new Alert(
                         Alert.AlertType.CONFIRMATION,
                         "Overwrite existing file '" + tf.getName() + "'?");
@@ -900,10 +910,10 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                         logger.debug("[SIGN] overwrite file cancelled");
                     }
                     return;
-                }        		
-        	}
+                }
+            }
         }
-        
+
         UnsignCommand unsignCommand = unsignCommandProvider.get();
         SignCommand signCommand = signCommandProvider.get();
 
@@ -934,15 +944,15 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                         return null;
                     }
                 } else {
-                	
-                	//
-                	// #6 needs a copy to the target if target file doesn't
-                	// exist
-                	//
-                	if( logger.isDebugEnabled() ) {
-                		logger.debug("[SIGN] copying for sign operation");
-                	}
-                	updateTitle("Copying JAR");
+
+                    //
+                    // #6 needs a copy to the target if target file doesn't
+                    // exist
+                    //
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[SIGN] copying for sign operation");
+                    }
+                    updateTitle("Copying JAR");
                     Platform.runLater(
                             () -> txtConsole.appendText("Copying JAR" + System.getProperty("line.separator"))
                     );
@@ -974,7 +984,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 updateProgress(1.0d, 1.0d);
                 updateMessage("JAR signed successfully");
 
-                Platform.runLater( () -> {
+                Platform.runLater(() -> {
                     piSignProgress.progressProperty().unbind();
                     lblStatus.textProperty().unbind();
                 });
@@ -1004,7 +1014,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             protected void cancelled() {
                 super.cancelled();
 
-                if( logger.isWarnEnabled() ) {
+                if (logger.isWarnEnabled()) {
                     logger.warn("signing jar operation cancelled");
                 }
 
@@ -1036,23 +1046,23 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         SettingsController settingsView = settingsControllerProvider.get();
         try {
             settingsView.show();  // ignoring the primaryStage
-        } catch(Exception exc) {
+        } catch (Exception exc) {
             String msg = "Error launching Settings";
-            logger.error( msg, exc );
+            logger.error(msg, exc);
             Alert alert = new Alert(Alert.AlertType.ERROR, msg);
             alert.showAndWait();
         }
     }
-    
+
     @FXML
     public void openJarsignerConfig() {
 
-    	clearValidationErrors();
-    	
-        if( StringUtils.isNotEmpty(activeConfiguration.getJDKHome()) ) {
+        clearValidationErrors();
+
+        if (StringUtils.isNotEmpty(activeConfiguration.getJDKHome())) {
 
             JarsignerConfigController jarsignerConfigView = jarsignerConfigControllerProvider.get();
-            jarsignerConfigView.setParent( this );
+            jarsignerConfigView.setParent(this);
             try {
                 jarsignerConfigView.show();
             } catch (Exception exc) {
@@ -1062,7 +1072,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 alert.showAndWait();
             }
         } else {
-            if( logger.isDebugEnabled() ) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("[OPEN JARSIGNER CONFIG] JDK_HOME not set");
             }
 
@@ -1074,26 +1084,25 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             FlowPane fp = new FlowPane();
             Label lbl = new Label("Set JDK_HOME in ");
             Hyperlink link = new Hyperlink("File > Settings");
-            fp.getChildren().addAll( lbl, link);
+            fp.getChildren().addAll(lbl, link);
 
-            link.setOnAction( (evt) -> {
+            link.setOnAction((evt) -> {
                 alert.close();
                 openSettings();
-            } );
+            });
 
-            alert.getDialogPane().contentProperty().set( fp );
+            alert.getDialogPane().contentProperty().set(fp);
 
             alert.showAndWait();
-
         }
     }
 
     @FXML
-    public void deleteProfile(ActionEvent evt) {
+    public void deleteProfile() {
 
         final String profileNameToDelete = lvProfiles.getSelectionModel().getSelectedItem();
 
-        if( logger.isDebugEnabled() ) {
+        if (logger.isDebugEnabled()) {
             logger.debug("[DELETE PROFILE] delete {}", profileNameToDelete);
         }
 
@@ -1109,10 +1118,16 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             return;
         }
 
+        final boolean apProfileNameSetFlag = StringUtils.equalsIgnoreCase(activeProfile.getProfileName(), profileNameToDelete);
+
+        if (apProfileNameSetFlag) {
+            activeProfile.setProfileName("");
+        }
+
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                configurationDS.deleteProfile( profileNameToDelete );
+                configurationDS.deleteProfile(profileNameToDelete);
                 return null;
             }
 
@@ -1134,9 +1149,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                         mRecentProfiles.getItems().add(MI_NO_PROFILES);
                     }
 
-                    lvProfiles.getItems().remove( profileNameToDelete );
+                    lvProfiles.getItems().remove(profileNameToDelete);
 
-                    if( StringUtils.equalsIgnoreCase( profileNameToDelete, activeProfile.getProfileName() ) ) {
+                    if (StringUtils.equalsIgnoreCase(profileNameToDelete, activeProfile.getProfileName())) {
                         newProfile();
                     }
 
@@ -1147,7 +1162,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             @Override
             protected void failed() {
                 super.failed();
-                Platform.runLater( () -> {
+                Platform.runLater(() -> {
                     Alert alert = new Alert(Alert.AlertType.ERROR, getException().getMessage());
                     alert.setHeaderText("Error deleting profile");
                     alert.showAndWait();
@@ -1159,10 +1174,136 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         new Thread(task).start();
     }
 
-	@Override
-	protected void postInit() throws Exception {
-		super.postInit();
-		stage.setMinHeight(600.0d);
-		stage.setMinWidth(1280.0d);
-	}    
+    @Override
+    protected void postInit() throws Exception {
+        super.postInit();
+        stage.setMinHeight(600.0d);
+        stage.setMinWidth(1280.0d);
+    }
+
+    @FXML
+    public void handleProjectBrowserKey(KeyEvent evt) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("[KEY] key={}", evt.getCode());
+        }
+        if (StringUtils.isNotEmpty(lvProfiles.getSelectionModel().getSelectedItem())) {
+
+            switch (evt.getCode()) {
+                case DELETE:
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[KEY] deleting");
+                    }
+                    deleteProfile();
+                    break;
+                case F2:
+                    int index = lvProfiles.getSelectionModel().getSelectedIndex();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[KEY] renaming index={}", index);
+                    }
+                    lvProfiles.edit(index);
+
+                    break;
+            }
+            //evt.consume();
+        }
+    }
+
+    @FXML
+    public void renameProfile(ListView.EditEvent<String> evt) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("[RENAME]");
+        }
+
+        final String oldProfileName = lvProfiles.getItems().get(evt.getIndex());
+        final boolean apProfileNameSetFlag = StringUtils.equalsIgnoreCase(activeProfile.getProfileName(), oldProfileName);
+
+        String suggestedNewProfileName = "";
+        if (configurationDS.profileExists(evt.getNewValue())) {
+
+            suggestedNewProfileName = configurationDS.suggestUniqueProfileName(evt.getNewValue());
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[RENAME] configuration exists; suggested name={}", suggestedNewProfileName);
+            }
+
+            Alert alert = new Alert(
+                    Alert.AlertType.CONFIRMATION,
+                    "That profile name already exists." + System.getProperty("line.separator") +
+                            "Save as " + suggestedNewProfileName + "?");
+            alert.setHeaderText("Profile name in use");
+            Optional<ButtonType> response = alert.showAndWait();
+            if (!response.isPresent() || response.get() != ButtonType.OK) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[RENAME] rename cancelled");
+                }
+                return;
+            }
+        }
+
+        final String newProfileName = StringUtils.defaultIfBlank(suggestedNewProfileName, evt.getNewValue());
+
+        if (apProfileNameSetFlag) {  // needs to be set for save
+            activeProfile.setProfileName(newProfileName);
+        }
+
+        Task<Void> renameTask = new Task<Void>() {
+
+            @Override
+            protected Void call() throws Exception {
+                configurationDS.renameProfile(oldProfileName, newProfileName);
+                Platform.runLater(() -> {
+                    lvProfiles.getItems().set(evt.getIndex(), newProfileName);
+
+                    Collections.sort(lvProfiles.getItems());
+                    lvProfiles.getSelectionModel().select(newProfileName);
+
+                });
+                return null;
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+                logger.error("can't rename profile from " + oldProfileName + " to " + newProfileName, getException());
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(
+                            Alert.AlertType.ERROR,
+                            getException().getMessage());
+                    alert.setHeaderText("Can't rename profile '" + oldProfileName + "'");
+                    alert.showAndWait();
+
+                    if (apProfileNameSetFlag) {  // revert
+                        activeProfile.setProfileName(oldProfileName);
+                    }
+                });
+            }
+
+            @Override
+            protected void cancelled() {
+                super.cancelled();
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(
+                            Alert.AlertType.ERROR,
+                            "Rename cancelled by user");
+                    alert.setHeaderText("Cancelled");
+                    alert.showAndWait();
+
+                    if (apProfileNameSetFlag) {  // revert
+                        activeProfile.setProfileName(oldProfileName);
+                    }
+                });
+            }
+        };
+
+        new Thread(renameTask).start();
+    }
+
+    @FXML
+    public void rename() {
+        int index = lvProfiles.getSelectionModel().getSelectedIndex();
+        if (logger.isDebugEnabled()) {
+            logger.debug("[CONTEXT MENU] renaming index={}", index);
+        }
+        lvProfiles.edit(index);
+    }
 }

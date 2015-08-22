@@ -51,10 +51,13 @@
                   </HBox>
                   <AnchorPane>
                      <children>
-                        <ListView fx:id="lvProfiles" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                         <ListView fx:id="lvProfiles" editable="true" onEditCommit="#renameProfile"
+                                   onKeyPressed="#handleProjectBrowserKey" AnchorPane.bottomAnchor="0.0"
+                                   AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <contextMenu>
                               <ContextMenu>
                                 <items>
+                                    <MenuItem mnemonicParsing="false" onAction="#rename" text="Rename"/>
                                   <MenuItem mnemonicParsing="false" onAction="#deleteProfile" text="Delete" />
                                 </items>
                               </ContextMenu>

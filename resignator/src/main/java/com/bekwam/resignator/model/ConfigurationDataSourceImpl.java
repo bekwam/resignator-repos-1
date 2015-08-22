@@ -42,6 +42,8 @@ import java.util.Optional;
 /**
  * Implementation of ConfigurationDataSource
  *
+ * Watch out for bound properties being used in calls wrapped by a Task.
+ *
  * @author carl_000
  * @since 1.0.0
  */
@@ -281,5 +283,86 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
             }
         }
         return exists;
+    }
+
+    @Override
+    public void renameProfile(String oldProfileName, String newProfileName) throws IOException {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("[RENAME] old={}, new={}", oldProfileName, newProfileName);
+        }
+
+        //
+        // if needed, rename the item in recent profiles
+        //
+        for (int i = 0; i < activeConf.getRecentProfiles().size(); i++) {
+            if (StringUtils.equalsIgnoreCase(activeConf.getRecentProfiles().get(i), oldProfileName)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[RENAME] renaming item in recent profiles");
+                }
+                activeConf.getRecentProfiles().set(i, newProfileName);
+            }
+        }
+
+        if (StringUtils.equalsIgnoreCase(activeProfile.getProfileName(), oldProfileName)) {
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[RENAME] renaming the active profile");
+            }
+            //
+            // rename the active profilename property
+            //
+            activeProfile.setProfileName(newProfileName);
+
+            //
+            // save everything to disk
+            //
+            saveProfile();
+
+        } else {
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[RENAME] renaming profile that is NOT the active profile");
+            }
+
+            //
+            // rename target is not the active record; save directly to dao
+            //
+
+            if (configuration.isPresent()) {
+                for (int j = 0; j < configuration.get().getProfiles().size(); j++) {
+                    Profile p = configuration.get().getProfiles().get(j);
+                    if (StringUtils.equalsIgnoreCase(p.getProfileName(), oldProfileName)) {
+                        Profile np = new Profile(newProfileName, p.getReplaceSignatures());
+                        np.setSourceFile(p.getSourceFile());
+                        np.setTargetFile(p.getTargetFile());
+                        np.setJarsignerConfig(p.getJarsignerConfig());
+                        configuration.get().getProfiles().set(j, np);
+                        saveConfiguration();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public String suggestUniqueProfileName(String profileName) {
+
+        int counter = 2;
+
+        do {
+            final String pn = profileName + "-" + counter;
+
+            boolean found = configuration.get().getProfiles().
+                    stream().
+                    anyMatch(p -> StringUtils.equalsIgnoreCase(p.getProfileName(), pn));
+
+            if (!found) {
+                return pn;
+            }
+
+            counter++;
+        } while (true);
     }
 }
