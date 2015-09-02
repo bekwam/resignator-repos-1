@@ -77,7 +77,6 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
         configuration = Optional.of( new Configuration() );
 
         initFileSystem();
-        loadConfiguration();
     }
 
     @Override
