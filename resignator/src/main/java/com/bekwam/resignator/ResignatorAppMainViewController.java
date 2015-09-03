@@ -21,6 +21,7 @@ import com.bekwam.resignator.commands.SignCommand;
 import com.bekwam.resignator.commands.UnsignCommand;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.bekwam.resignator.model.Profile;
+import com.google.common.base.Preconditions;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -222,18 +223,22 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 protected void succeeded() {
                     super.succeeded();
                     updateMessage("");
+
+                    Platform.runLater(() -> lblStatus.textProperty().unbind());
                 }
 
                 @Override
                 protected void cancelled() {
                     super.cancelled();
                     updateMessage("");
+                    Platform.runLater(() -> lblStatus.textProperty().unbind());
                 }
 
                 @Override
                 protected void failed() {
                     super.failed();
                     updateMessage("");
+                    Platform.runLater(() -> lblStatus.textProperty().unbind());
                 }
             };
 
@@ -382,7 +387,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         //
         // Clear output from last operation
         //
+        Preconditions.checkArgument(!lblStatus.textProperty().isBound());
         lblStatus.setText("");
+
         txtConsole.setText("");
         piSignProgress.setProgress(0.0d);
         piSignProgress.setVisible(false);
