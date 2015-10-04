@@ -204,7 +204,7 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
         JsonArray profiles = serializeProfiles(configuration.getProfiles());
         String hp = configuration.getHashedPassword().orElse("");
         String lud = "";
-        if( configuration.getLastUpdatedDateTime() != null ) {
+        if( configuration.getLastUpdatedDateTime().isPresent() ) {
 
             lud = configuration.getLastUpdatedDateTime()
                     .get()

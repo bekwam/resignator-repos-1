@@ -1326,6 +1326,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     lvProfiles.edit(index);
 
                     break;
+			default:
+				break;
             }
             //evt.consume();
         }

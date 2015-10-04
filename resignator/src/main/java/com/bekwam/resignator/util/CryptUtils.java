@@ -81,51 +81,54 @@ public class CryptUtils {
             char[] passPhrase)
             throws IOException, PGPException, NoSuchProviderException
     {
-        InputStream in = new ByteArrayInputStream(encrypted);
-
-        in = PGPUtil.getDecoderStream(in);
-
-        PGPObjectFactory pgpF = new PGPObjectFactory(in, new BcKeyFingerprintCalculator());
-        PGPEncryptedDataList enc;
-        Object o = pgpF.nextObject();
-
-        if( o == null ) { // decryption failed; there is no next object
-
-            //
-            // This could arise if there is a problem with the underlying file.
-            //
-
-            if( logger.isWarnEnabled() ) {
-                logger.warn("Field could not be decrypted. (Config file modified outside of app?)  Returning input bytes as encrypted bytes.");
-            }
-
-            return encrypted;
-        }
-
-        //
-        // the first object might be a PGP marker packet.
-        //
-
-        if (o instanceof PGPEncryptedDataList)
-        {
-            enc = (PGPEncryptedDataList)o;
-        }
-        else
-        {
-            enc = (PGPEncryptedDataList)pgpF.nextObject(); // i don't think this will be used
-        }
-
-        PGPPBEEncryptedData pbe = (PGPPBEEncryptedData)enc.get(0);
-
-        InputStream clear = pbe.getDataStream(
-                new JcePBEDataDecryptorFactoryBuilder(
-                        new JcaPGPDigestCalculatorProviderBuilder()
-                                .setProvider("BC")
-                                .build())
-                        .setProvider("BC")
-                        .build(passPhrase));
-
-        return Streams.readAll(clear);
+    	try (
+    			InputStream in = new ByteArrayInputStream(encrypted)
+    			)
+    	{
+	        InputStream decoderIn = PGPUtil.getDecoderStream(in);
+	
+	        PGPObjectFactory pgpF = new PGPObjectFactory(decoderIn, new BcKeyFingerprintCalculator());
+	        PGPEncryptedDataList enc;
+	        Object o = pgpF.nextObject();
+	
+	        if( o == null ) { // decryption failed; there is no next object
+	
+	            //
+	            // This could arise if there is a problem with the underlying file.
+	            //
+	
+	            if( logger.isWarnEnabled() ) {
+	                logger.warn("Field could not be decrypted. (Config file modified outside of app?)  Returning input bytes as encrypted bytes.");
+	            }
+	
+	            return encrypted;
+	        }
+	
+	        //
+	        // the first object might be a PGP marker packet.
+	        //
+	
+	        if (o instanceof PGPEncryptedDataList)
+	        {
+	            enc = (PGPEncryptedDataList)o;
+	        }
+	        else
+	        {
+	            enc = (PGPEncryptedDataList)pgpF.nextObject(); // i don't think this will be used
+	        }
+	
+	        PGPPBEEncryptedData pbe = (PGPPBEEncryptedData)enc.get(0);
+	
+	        InputStream clear = pbe.getDataStream(
+	                new JcePBEDataDecryptorFactoryBuilder(
+	                        new JcaPGPDigestCalculatorProviderBuilder()
+	                                .setProvider("BC")
+	                                .build())
+	                        .setProvider("BC")
+	                        .build(passPhrase));
+	
+	        return Streams.readAll(clear);
+    	} 
     }
 
     public String encrypt(

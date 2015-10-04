@@ -94,7 +94,10 @@ public class ConfigurationJSONAdapterTest {
         TargetFile tf = new TargetFile("C:\\jars\\mycode-signed.jar");
         p.setTargetFile(Optional.of(tf));
 
-        JarsignerConfig jc = new JarsignerConfig("mykey", "storepass", "keypass", "keystore", Boolean.TRUE);
+        JarsignerConfig jc = new JarsignerConfig("mykey", "", "", "keystore", Boolean.TRUE);
+        jc.setEncryptedKeypass("LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNTIKCmpBMEVCd01DQjgyMU5EVmd2U2RneVJpMXFzR05zTkJxZFNRRE45cVNEbkFpSkdxeGJzRHUwbjQ9Cj1KZE5MCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0K");
+        jc.setEncryptedStorepass("LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNTIKCmpBMEVCd01DQjgyMU5EVmd2U2RneVJpMXFzR05zTkJxZFNRRE45cVNEbkFpSkdxeGJzRHUwbjQ9Cj1KZE5MCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0K");
+        
         p.setJarsignerConfig(Optional.of(jc));
 
         conf.getProfiles().add(p);
@@ -130,8 +133,8 @@ public class ConfigurationJSONAdapterTest {
         assertEquals("C:\\jars\\mycode.jar", sourceFileFileName );
         assertEquals("C:\\jars\\mycode-signed.jar", targetFileFileName );
         assertEquals("mykey", alias);
-        assertEquals( "storepass", storepass );
-        assertEquals( "keypass", keypass );
+        assertEquals( "LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNTIKCmpBMEVCd01DQjgyMU5EVmd2U2RneVJpMXFzR05zTkJxZFNRRE45cVNEbkFpSkdxeGJzRHUwbjQ9Cj1KZE5MCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0K", storepass );
+        assertEquals( "LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNTIKCmpBMEVCd01DQjgyMU5EVmd2U2RneVJpMXFzR05zTkJxZFNRRE45cVNEbkFpSkdxeGJzRHUwbjQ9Cj1KZE5MCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0K", keypass );
         assertEquals( "keystore", keystore );
         assertEquals( Boolean.TRUE, verbose );
     }
@@ -199,8 +202,8 @@ public class ConfigurationJSONAdapterTest {
 
         JsonObject jc = new JsonObject();
         jc.addProperty( "alias", "mykey" );
-        jc.addProperty( "storepass", "abc123" );
-        jc.addProperty( "keypass", "password" );
+        jc.addProperty( "storepass", "LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNTIKCmpBMEVCd01DQjgyMU5EVmd2U2RneVJpMXFzR05zTkJxZFNRRE45cVNEbkFpSkdxeGJzRHUwbjQ9Cj1KZE5MCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0K" );
+        jc.addProperty( "keypass", "LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNTIKCmpBMEVCd01DQjgyMU5EVmd2U2RneVJpMXFzR05zTkJxZFNRRE45cVNEbkFpSkdxeGJzRHUwbjQ9Cj1KZE5MCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0K" );
         jc.addProperty( "keystore", "C:\\keystores\\keystore.jks" );
         jc.addProperty("verbose", Boolean.TRUE);
         p.add("jarsignerConfig", jc );
@@ -222,8 +225,8 @@ public class ConfigurationJSONAdapterTest {
         assertEquals( "C:\\jars\\mycode-signed.jar", conf.getProfiles().get(0).getTargetFile().get().getFileName());
 
         assertEquals( "mykey", conf.getProfiles().get(0).getJarsignerConfig().get().getAlias() );
-        assertEquals( "abc123", conf.getProfiles().get(0).getJarsignerConfig().get().getStorepass());
-        assertEquals( "password", conf.getProfiles().get(0).getJarsignerConfig().get().getKeypass());
+        assertEquals( "LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNTIKCmpBMEVCd01DQjgyMU5EVmd2U2RneVJpMXFzR05zTkJxZFNRRE45cVNEbkFpSkdxeGJzRHUwbjQ9Cj1KZE5MCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0K", conf.getProfiles().get(0).getJarsignerConfig().get().getEncryptedStorepass());
+        assertEquals( "LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNTIKCmpBMEVCd01DQjgyMU5EVmd2U2RneVJpMXFzR05zTkJxZFNRRE45cVNEbkFpSkdxeGJzRHUwbjQ9Cj1KZE5MCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0K", conf.getProfiles().get(0).getJarsignerConfig().get().getEncryptedKeypass());
         assertEquals( "C:\\keystores\\keystore.jks", conf.getProfiles().get(0).getJarsignerConfig().get().getKeystore());
         assertEquals( true, conf.getProfiles().get(0).getJarsignerConfig().get().getVerbose());
     }
