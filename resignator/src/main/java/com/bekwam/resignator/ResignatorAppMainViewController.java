@@ -54,6 +54,7 @@ import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -83,6 +84,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
     private final InvalidationListener needsSaveListener = (evt) -> needsSave.set(true);
     private final MenuItem MI_NO_PROFILES = new MenuItem("< None >");
+    private final int MAX_WAIT_TIME = 10 * 60 * 1000;  // 10 minutes
+
     @FXML
     SplitPane sp;
     @FXML
@@ -134,6 +137,12 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
     @Inject
     Provider<UnsignCommand> unsignCommandProvider;
+
+    @Inject
+    Provider<NewPasswordController> newPasswordControllerProvider;
+
+    @Inject
+    Provider<PasswordController> passwordControllerProvider;
 
     @Inject
     @Named("NumRecentProfiles")
@@ -192,6 +201,110 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     updateMessage("Loading configuration");
                     configurationDS.loadConfiguration();
 
+                    if( !configurationDS.isSecured() ) {
+                        if(logger.isDebugEnabled() ) {
+                            logger.debug("[CALL] config not secured; getting password");
+                        }
+                        NewPasswordController npc = newPasswordControllerProvider.get();
+
+                        if( logger.isDebugEnabled() ) {
+                            logger.debug("[INIT TASK] npc id={}", npc.hashCode());
+                        }
+
+                        Platform.runLater( () -> {
+                            try {
+                                npc.showAndWait();
+                            } catch(Exception exc) {
+                                logger.error( "error showing npc", exc);
+                            }
+                        });
+
+                        synchronized (npc) {
+                            try {
+                                npc.wait(MAX_WAIT_TIME);  // 10 minutes to enter the password
+                            } catch(InterruptedException exc) {
+                                logger.error("new password operation interrupted", exc);
+                            }
+                        }
+
+                        if( logger.isDebugEnabled() ) {
+                            logger.debug("[INIT TASK] npc={}", npc.getHashedPassword());
+                        }
+
+                        if( StringUtils.isNotEmpty(npc.getHashedPassword() ) ) {
+
+                            activeConfiguration.setHashedPassword(npc.getHashedPassword());
+                            activeConfiguration.setUnhashedPassword(npc.getUnhashedPassword());
+                            activeConfiguration.setLastUpdatedDateTime(LocalDateTime.now());
+                            configurationDS.saveConfiguration();
+
+                            configurationDS.loadConfiguration();
+                            configurationDS.decrypt( activeConfiguration.getUnhashedPassword() );
+
+                        } else {
+
+                            Platform.runLater( () -> {
+                                Alert noPassword = new Alert(
+                                        Alert.AlertType.INFORMATION,
+                                        "You'll need to provide a password to save your keystore credentials.");
+                                noPassword.showAndWait();
+                            });
+
+                            return null;
+                        }
+                    } else {
+
+                        PasswordController pc = passwordControllerProvider.get();
+
+                        Platform.runLater( () -> {
+                            try {
+                                pc.showAndWait();
+                            } catch(Exception exc) {
+                                logger.error( "error showing pc", exc);
+                            }
+                        });
+
+                        synchronized (pc) {
+                            try {
+                                pc.wait(MAX_WAIT_TIME);  // 10 minutes to enter the password
+                            } catch(InterruptedException exc) {
+                                logger.error("password operation interrupted", exc);
+                            }
+                        }
+
+                        Platform.runLater( () -> {
+
+                            if( pc.getStage().isShowing() ) {  // ended in timeout timeout
+                                pc.getStage().hide();
+                            }
+
+                            if( pc.wasCancelled() || !pc.doesPasswordMatch() ) {
+
+                                if( logger.isDebugEnabled() ) {
+                                    logger.debug("[INIT TASK] was cancelled or the number of retries was exceeded");
+                                }
+
+                                String msg = (!pc.wasCancelled())?"Exceeded maximum number of retries. Exitting...":
+                                        "You must provide a password to the datastore. Exitting...";
+
+                                Alert alert = new Alert(
+                                    Alert.AlertType.WARNING,
+                                    msg);
+                                alert.setOnCloseRequest( (evt) -> Platform.exit());
+                                alert.showAndWait();
+                            } else {
+
+                                //
+                                // save password for later decryption ops
+                                //
+
+                                activeConfiguration.setUnhashedPassword(pc.getPassword());
+
+                                configurationDS.decrypt( activeConfiguration.getUnhashedPassword() );
+                            }
+                        } );
+                    }
+
                     //
                     // init profileBrowser
                     //
@@ -223,13 +336,13 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 protected void succeeded() {
                     super.succeeded();
                     updateMessage("");
-
                     Platform.runLater(() -> lblStatus.textProperty().unbind());
                 }
 
                 @Override
                 protected void cancelled() {
                     super.cancelled();
+                    logger.error( "task failed", getException());
                     updateMessage("");
                     Platform.runLater(() -> lblStatus.textProperty().unbind());
                 }
@@ -237,6 +350,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 @Override
                 protected void failed() {
                     super.failed();
+                    logger.error("task failed", getException());
                     updateMessage("");
                     Platform.runLater(() -> lblStatus.textProperty().unbind());
                 }
@@ -1186,6 +1300,8 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
         super.postInit();
         stage.setMinHeight(600.0d);
         stage.setMinWidth(1280.0d);
+
+        stage.setOnCloseRequest((evt) -> Platform.exit());
     }
 
     @FXML
@@ -1312,5 +1428,62 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
             logger.debug("[CONTEXT MENU] renaming index={}", index);
         }
         lvProfiles.edit(index);
+    }
+
+    @FXML
+    public void changePassword() {
+
+        Task<Void> task = new Task<Void>() {
+
+            @Override
+            protected Void call() throws Exception {
+
+                NewPasswordController npc = newPasswordControllerProvider.get();
+
+                Platform.runLater( () -> {
+                    try {
+                        npc.showAndWait();
+                    } catch ( Exception exc) {
+                        logger.error("error showing change password form", exc);
+                    }
+                });
+
+                synchronized(npc) {
+                    try {
+                        npc.wait(MAX_WAIT_TIME);  // 10 minutes to enter the password
+                    } catch (InterruptedException exc) {
+                        logger.error("change password operation interrupted", exc);
+                    }
+                }
+
+                if (logger.isDebugEnabled()){
+                    logger.debug("[CHANGE PASSWORD] npc={}", npc.getHashedPassword());
+                }
+
+                if (StringUtils.isNotEmpty(npc.getHashedPassword())) {
+
+                    activeConfiguration.setHashedPassword(npc.getHashedPassword());
+                    activeConfiguration.setUnhashedPassword(npc.getUnhashedPassword());
+                    activeConfiguration.setLastUpdatedDateTime(LocalDateTime.now());
+
+                    configurationDS.saveConfiguration();
+
+                    configurationDS.loadConfiguration();
+
+                } else {
+
+                    Platform.runLater(() -> {
+                        Alert noPassword = new Alert(
+                                Alert.AlertType.INFORMATION,
+                                "Password change cancelled.");
+                        noPassword.showAndWait();
+                    });
+
+                }
+
+                return null;
+            }
+        };
+        new Thread(task).start();
     }
 }

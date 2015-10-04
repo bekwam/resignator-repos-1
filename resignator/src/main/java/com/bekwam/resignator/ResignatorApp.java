@@ -15,15 +15,16 @@
  */
 package com.bekwam.resignator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
 import javafx.application.Application;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.security.Security;
 
 /**
  * App that re-signs JAR files by stripping the prior signature and applying a new signature
@@ -41,6 +42,8 @@ public class ResignatorApp extends Application {
         if( logger.isDebugEnabled() ) {
             logger.debug("[START] starting app");
         }
+
+        Security.addProvider(new BouncyCastleProvider());
 
         //
         // Initiaize Google Guice

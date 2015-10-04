@@ -15,6 +15,7 @@
  */
 package com.bekwam.resignator.model;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +29,8 @@ public class Configuration {
     private Optional<String> activeProfile = Optional.empty();
     private final List<String> recentProfiles = new ArrayList<>();
     private final List<Profile> profiles = new ArrayList<>();
+    private Optional<String> hashedPassword = Optional.empty();
+    private Optional<LocalDateTime> lastUpdatedDateTime = Optional.empty();
 
     public Optional<String> getJDKHome() { return jdkHome; }
 
@@ -51,6 +54,19 @@ public class Configuration {
         return profiles;
     }
 
+    public Optional<String> getHashedPassword() {
+        return hashedPassword;
+    }
+
+    public void setHashedPassword(Optional<String> hashedPassword) {
+        this.hashedPassword = hashedPassword;
+    }
+
+    public Optional<LocalDateTime> getLastUpdatedDateTime() { return lastUpdatedDateTime; }
+    public void setLastUpdatedDateTime(Optional<LocalDateTime> lastUpdatedDateTime) {
+        this.lastUpdatedDateTime = lastUpdatedDateTime;
+    }
+
     @Override
     public String toString() {
         return "Configuration{" +
@@ -58,6 +74,8 @@ public class Configuration {
                 ", activeProfile=" + activeProfile +
                 ", recentProfiles=" + recentProfiles +
                 ", profiles=" + profiles +
-                '}';
+                ", password is empty?=" + hashedPassword.isPresent() +
+                ", lastUpdatedDateTime=" + lastUpdatedDateTime +
+                "}";
     }
 }

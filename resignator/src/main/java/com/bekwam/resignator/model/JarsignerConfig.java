@@ -15,16 +15,21 @@
  */
 package com.bekwam.resignator.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * @author carl_000
  */
 public class JarsignerConfig {
 
     private final String alias;
-    private final String storepass;
-    private final String keypass;
-    private final String keystore;
     private final Boolean verbose;
+    private final String keystore;
+
+    private String keypass;
+    private String storepass;
+    private String encryptedStorepass;
+    private String encryptedKeypass;
 
     public JarsignerConfig(String alias, String storepass, String keypass, String keystore, Boolean verbose) {
         this.alias = alias;
@@ -42,9 +47,13 @@ public class JarsignerConfig {
         return storepass;
     }
 
+    public void setStorepass(String storepass) { this.storepass = storepass; }
+
     public String getKeypass() {
         return keypass;
     }
+
+    public void setKeypass(String keypass) { this.keypass = keypass; }
 
     public String getKeystore() {
         return keystore;
@@ -54,14 +63,32 @@ public class JarsignerConfig {
         return verbose;
     }
 
+    public String getEncryptedStorepass() {
+        return encryptedStorepass;
+    }
+
+    public void setEncryptedStorepass(String encryptedStorepass) {
+        this.encryptedStorepass = encryptedStorepass;
+    }
+
+    public String getEncryptedKeypass() {
+        return encryptedKeypass;
+    }
+
+    public void setEncryptedKeypass(String encryptedKeypass) {
+        this.encryptedKeypass = encryptedKeypass;
+    }
+
     @Override
     public String toString() {
         return "JarsignerConfig{" +
                 "alias='" + alias + '\'' +
-                ", storepass='" + storepass + '\'' +
-                ", keypass='" + keypass + '\'' +
+                ", storepass not empty?='" + StringUtils.isNotEmpty(storepass) + '\'' +
+                ", keypass not empty?='" + StringUtils.isNotEmpty(keypass) + '\'' +
                 ", keystore='" + keystore + '\'' +
-                ", verbose=" + verbose +
+                ", verbose=" + verbose + '\'' +
+                ", encStorepass not empty?='" + StringUtils.isNotEmpty(encryptedStorepass) + '\'' +
+                ", encKeypass not empty?='" + StringUtils.isNotEmpty(encryptedKeypass) +
                 '}';
     }
 }

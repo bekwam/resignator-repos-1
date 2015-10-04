@@ -15,21 +15,16 @@
  */
 package com.bekwam.resignator.commands;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
+import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 /**
  * Executes an OS command as a Process
@@ -79,12 +74,6 @@ public class CommandExecutor {
             if( cmdAndArgs == null || cmdAndArgs.length <1 ) {
                 logger.error( "cmdAndArgs must be specified" );
                 throw new CommandExecutionException( "cmdAndArgs cannot be null and must contain at least one item" );
-            }
-
-            if( logger.isDebugEnabled() ) {
-                for( int i=0; i<cmdAndArgs.length; i++ ) {
-                    logger.debug("[EXEC] [{}] : {}", i, cmdAndArgs[i]);
-                }
             }
 
             ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);

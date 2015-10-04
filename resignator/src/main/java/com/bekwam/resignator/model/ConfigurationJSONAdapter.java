@@ -16,10 +16,13 @@
 package com.bekwam.resignator.model;
 
 import com.google.gson.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +60,22 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
             jdkHome = jdkElem.getAsString();
         }
 
+        JsonElement hpElem = obj.get("hashedPassword");
+        String hp = "";
+        if( hpElem != null ) {
+            hp = hpElem.getAsString();
+        }
+
+        JsonElement ludElem = obj.get("lastUpdatedDate");
+        String lud = "";
+        LocalDateTime lastUpdatedDate = null;
+        if( ludElem != null ) {
+            lud = ludElem.getAsString();
+            if( StringUtils.isNotEmpty(lud) ) {
+                lastUpdatedDate = LocalDateTime.parse(lud, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            }
+        }
+
         JsonArray recentProfiles = obj.getAsJsonArray("recentProfiles");
         JsonArray profiles = obj.getAsJsonArray("profiles");
 
@@ -68,9 +87,10 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
         Configuration conf = new Configuration();
         conf.setActiveProfile(Optional.of(ap));
         conf.setJDKHome(Optional.of(jdkHome));
-        conf.getRecentProfiles().addAll( deserializeRecentProfiles(recentProfiles) );
-        conf.getProfiles().addAll( deserializeProfiles(profiles) );
-
+        conf.getRecentProfiles().addAll(deserializeRecentProfiles(recentProfiles));
+        conf.getProfiles().addAll(deserializeProfiles(profiles));
+        conf.setHashedPassword(Optional.of(hp));
+        conf.setLastUpdatedDateTime(Optional.ofNullable(lastUpdatedDate));
         return conf;
     }
 
@@ -159,7 +179,10 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
                     verbose = ve.getAsBoolean();
                 }
 
-                JarsignerConfig jc = new JarsignerConfig(alias, storepass, keypass, keystore, verbose );
+                JarsignerConfig jc = new JarsignerConfig(alias, "", "", keystore, verbose );
+                jc.setEncryptedKeypass(keypass);
+                jc.setEncryptedStorepass(storepass);
+
                 p.setJarsignerConfig( Optional.of(jc) );
             }
 
@@ -178,14 +201,26 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
 
         String ap = configuration.getActiveProfile().orElse("");
         String jdkHome = configuration.getJDKHome().orElse("");
-        JsonArray profiles = serializeProfiles( configuration.getProfiles() );
+        JsonArray profiles = serializeProfiles(configuration.getProfiles());
+        String hp = configuration.getHashedPassword().orElse("");
+        String lud = "";
+        if( configuration.getLastUpdatedDateTime() != null ) {
+
+            lud = configuration.getLastUpdatedDateTime()
+                    .get()
+                    .format(
+                            DateTimeFormatter.ISO_LOCAL_DATE_TIME
+                    );
+        }
 
         JsonObject root = new JsonObject();
         root.addProperty("activeProfile", ap );
         root.addProperty("jdkHome", jdkHome);
+        root.addProperty("hashedPassword", hp);
+        root.addProperty("lastUpdatedDate", lud);
 
         if( logger.isDebugEnabled() ) {
-            logger.debug("[SERIALIZE] ap={}, jdkHome={}", ap, jdkHome);
+            logger.debug("[SERIALIZE] ap={}, jdkHome={}, hp empty?={}, lastUpdatedDate={}", ap, jdkHome, StringUtils.isEmpty(hp), lud);
         }
 
         root.add( "recentProfiles", serializeRecentProfiles(configuration.getRecentProfiles()) );
@@ -230,8 +265,15 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
                 JarsignerConfig jc = p.getJarsignerConfig().get();
                 JsonObject jcObj = new JsonObject();
                 jcObj.addProperty("alias", jc.getAlias());
-                jcObj.addProperty("storepass", jc.getStorepass());
-                jcObj.addProperty("keypass", jc.getKeypass());
+
+                //
+                // #1 storepass and keypass become temporary fields while the encrypted fields
+                // are persisted
+                //
+
+                jcObj.addProperty("storepass", jc.getEncryptedStorepass());
+                jcObj.addProperty("keypass", jc.getEncryptedKeypass());
+
                 jcObj.addProperty("keystore", jc.getKeystore());
                 jcObj.addProperty("verbose", jc.getVerbose());
                 profileObj.add( "jarsignerConfig", jcObj );

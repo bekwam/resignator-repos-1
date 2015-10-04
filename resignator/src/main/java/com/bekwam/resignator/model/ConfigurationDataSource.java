@@ -100,4 +100,17 @@ public interface ConfigurationDataSource {
      */
     String suggestUniqueProfileName(String profileName);
 
+    /**
+     * If there is a password (hashed) stored with json doc
+     *
+     * @return true if password exists
+     */
+    boolean isSecured();
+
+    /**
+     * Separates decrypt operation for init problem with verifying password after a loadConfiguration()
+     *
+     * @param passPhrase
+     */
+    void decrypt(String passPhrase);
 }

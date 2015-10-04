@@ -18,6 +18,7 @@ package com.bekwam.resignator.model;
 import com.bekwam.jfxbop.data.BaseManagedDataSource;
 import com.bekwam.resignator.ActiveConfiguration;
 import com.bekwam.resignator.ActiveProfile;
+import com.bekwam.resignator.util.CryptUtils;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
@@ -63,7 +64,10 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     
     @Inject
     ActiveProfile activeProfile;
-    
+
+    @Inject
+    CryptUtils cryptUtils;
+
     private Optional<Configuration> configuration = Optional.empty();
     private Optional<File> configFile = Optional.empty();
 
@@ -161,6 +165,39 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     }
 
     @Override
+    public void decrypt(String passPhrase) {
+
+        //
+        // #1 decrypt the derived fields in jarsignerconfig.  There may not be a password at this point,
+        // so just skip the decryption until next call when one has been given.
+        //
+        if( StringUtils.isNotBlank(activeConf.getUnhashedPassword()) ) {
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[DECRYPT] there is a password; decrypting");
+            }
+            try {
+                for (Profile p : configuration.get().getProfiles()) {
+                    if (p.getJarsignerConfig().isPresent()) {
+                        JarsignerConfig jc = p.getJarsignerConfig().get();
+                        if( StringUtils.isNotBlank(jc.getEncryptedKeypass() ) ) {
+                            jc.setKeypass(cryptUtils.decrypt(jc.getEncryptedKeypass(), passPhrase));
+                        }
+                        if( StringUtils.isNotBlank(jc.getEncryptedStorepass()) ) {
+                            jc.setStorepass(cryptUtils.decrypt(jc.getEncryptedStorepass(), passPhrase));
+                        }
+                    }
+                }
+            } catch (Exception exc) {
+                logger.error("encryption error", exc);
+            }
+        } else {
+            if( logger.isDebugEnabled() ) {
+                logger.debug("[DECRYPT] no password available; deferring decryption");
+            }
+        }
+    }
+
+    @Override
     public void saveConfiguration() throws IOException {
 
     	Preconditions.checkArgument( configuration.isPresent() );
@@ -175,8 +212,29 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
     	c.setActiveProfile(Optional.of(activeConf.getActiveProfile()));
     	c.setJDKHome(Optional.of(activeConf.getJDKHome()));
     	c.getRecentProfiles().clear();
-    	c.getRecentProfiles().addAll( activeConf.getRecentProfiles() );
-    	
+    	c.getRecentProfiles().addAll(activeConf.getRecentProfiles());
+    	c.setHashedPassword(Optional.of(activeConf.getHashedPassword()));
+        c.setLastUpdatedDateTime(Optional.of(activeConf.getLastUpdatedDateTime()));
+
+        //
+        // #1 set the derived field in jarsignerconfig to include encrypted values
+        //
+        try {
+            for (Profile p : c.getProfiles()) {
+                if (p.getJarsignerConfig().isPresent()) {
+                    JarsignerConfig jc = p.getJarsignerConfig().get();
+                    if( StringUtils.isNotBlank(jc.getKeypass()) ) {
+                        jc.setEncryptedKeypass(cryptUtils.encrypt(jc.getKeypass(), activeConf.getUnhashedPassword()));
+                    }
+                    if( StringUtils.isNotBlank(jc.getStorepass() ) ) {
+                        jc.setEncryptedStorepass(cryptUtils.encrypt(jc.getStorepass(), activeConf.getUnhashedPassword()));
+                    }
+                }
+            }
+        } catch(Exception exc) {
+            logger.error( "encryption error", exc );
+        }
+
         Gson gson = new GsonBuilder().
                 registerTypeAdapter(Configuration.class, new ConfigurationJSONAdapter()).
                 setPrettyPrinting().
@@ -363,5 +421,24 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
 
             counter++;
         } while (true);
+    }
+
+    @Override
+    public boolean isSecured() {
+        if( configuration.isPresent() ) {
+            return configuration.get().getHashedPassword().filter( (p) -> StringUtils.isNotBlank(p) ).isPresent();
+        }
+        return false;
+    }
+
+    /**
+     * Not exposed outside of package or impl.
+     *
+     * Intended for unit tests
+     *
+     * @param configuration
+     */
+    void setConfiguration(Optional<Configuration> configuration) {
+        this.configuration = configuration;
     }
 }

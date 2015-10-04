@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-      minWidth="-Infinity" xmlns="http://javafx.com/javafx/8"
-      fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
    <children>
       <MenuBar VBox.vgrow="NEVER">
         <menus>
@@ -15,14 +15,15 @@
                   <MenuItem mnemonicParsing="false" onAction="#loadProfile" text="Load Profile" />
                 <Menu fx:id="mRecentProfiles" mnemonicParsing="false" text="Recent Profiles">
                     <items>
-                        <MenuItem mnemonicParsing="false" text="&lt; None &gt;"/>
+                        <MenuItem mnemonicParsing="false" text="&lt; None &gt;" />
                     </items>
                 </Menu>
-                <SeparatorMenuItem mnemonicParsing="false"/>
+                <SeparatorMenuItem mnemonicParsing="false" />
                 <MenuItem fx:id="miSave" disable="true" mnemonicParsing="false" onAction="#saveProfile" text="Save Profile" />
                   <MenuItem mnemonicParsing="false" onAction="#saveAsProfile" text="Save As Profile" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" onAction="#openSettings" text="Settings" />
+                  <MenuItem mnemonicParsing="false" onAction="#changePassword" text="Change Password" />
                   <SeparatorMenuItem mnemonicParsing="false" />
               <MenuItem mnemonicParsing="false" onAction="#close" text="Close" />
             </items>
@@ -51,13 +52,11 @@
                   </HBox>
                   <AnchorPane>
                      <children>
-                         <ListView fx:id="lvProfiles" editable="true" onEditCommit="#renameProfile"
-                                   onKeyPressed="#handleProjectBrowserKey" AnchorPane.bottomAnchor="0.0"
-                                   AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                         <ListView fx:id="lvProfiles" editable="true" onEditCommit="#renameProfile" onKeyPressed="#handleProjectBrowserKey" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <contextMenu>
                               <ContextMenu>
                                 <items>
-                                    <MenuItem mnemonicParsing="false" onAction="#rename" text="Rename"/>
+                                    <MenuItem mnemonicParsing="false" onAction="#rename" text="Rename" />
                                   <MenuItem mnemonicParsing="false" onAction="#deleteProfile" text="Delete" />
                                 </items>
                               </ContextMenu>

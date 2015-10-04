@@ -15,21 +15,18 @@
  */
 package com.bekwam.resignator;
 
+import com.bekwam.resignator.model.Configuration;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.inject.Singleton;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import javax.inject.Singleton;
-
-import com.bekwam.resignator.model.Configuration;
-
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
 
 /**
  * @author carlwalker
@@ -41,6 +38,9 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 	private final StringProperty jdkHome = new SimpleStringProperty("");
 	private final StringProperty activeProfile = new SimpleStringProperty("");
 	private final ListProperty<String> recentProfiles = new SimpleListProperty<String>();
+	private final StringProperty hashedPassword = new SimpleStringProperty("");
+	private final ObjectProperty<LocalDateTime> lastUpdatedDateTime = new SimpleObjectProperty<>();
+	private final StringProperty unhashedPassword = new SimpleStringProperty("");  // not saved
 
 	// computed properties
 	private Optional<Path> keytoolCommand = Optional.empty();
@@ -71,7 +71,7 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 
 	public List<String> getRecentProfiles() { return recentProfiles.get(); }
 	public void setRecentProfiles(List<String> rps) {
-		recentProfiles.setValue( FXCollections.observableArrayList(rps) );
+		recentProfiles.setValue(FXCollections.observableArrayList(rps));
 	}
 
 	public Path getKeytoolCommand() {
@@ -86,14 +86,37 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 		return jarCommand.orElse(null);
 	}
 
+	public String getHashedPassword() { return hashedPassword.get(); }
+	public void setHashedPassword(String hp) {
+		hashedPassword.set(hp);
+	}
+
+	public String getUnhashedPassword() { return unhashedPassword.get(); }
+	public void setUnhashedPassword(String uhp) {
+		unhashedPassword.set(uhp);
+	}
+
+	public LocalDateTime getLastUpdatedDateTime() { return lastUpdatedDateTime.get(); }
+	public void setLastUpdatedDateTime(LocalDateTime lud) {
+		lastUpdatedDateTime.set(lud);
+	}
+
 	public StringProperty jdkHomeProperty() { return jdkHome; }
 	public StringProperty activeProfileProperty() { return activeProfile; }
 	public ListProperty<String> recentProfilesProperty() { return recentProfiles; }
-	
+	public StringProperty hashedPasswordProperty() { return hashedPassword; }
+	public StringProperty unhashedPasswordProperty() { return unhashedPassword; }
+
+	public ObjectProperty<LocalDateTime> lastUpdatedDateTimeProperty() { return lastUpdatedDateTime; }
+
 	@Override
 	public String toString() {
 		return "ActiveConfiguration [jdkHome=" + jdkHome + ", activeProfile=" + activeProfile
-				+ ", recentProfiles=" + recentProfiles + "]";
+				+ ", recentProfiles=" + recentProfiles
+				+ ", hashedPassword is empty?=" + StringUtils.isEmpty(hashedPassword.get())
+				+ ", unhashedPassword is empty?=" + StringUtils.isEmpty(unhashedPassword.get())
+				+ ", lastUpdatedDateTime=" + lastUpdatedDateTime.get()
+				+ "]";
 	}	
 	
 	@Override
@@ -101,6 +124,9 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 		jdkHome.set("");
 		activeProfile.set("");
 		recentProfiles.clear();
+		hashedPassword.set("");
+		unhashedPassword.set("");
+		lastUpdatedDateTime.set(null);
 	}
 
 	@Override
@@ -114,6 +140,11 @@ public class ActiveConfiguration implements ActiveRecord<Configuration> {
 		jdkHome.setValue( domain.getJDKHome().orElse(""));
 		activeProfile.setValue( domain.getActiveProfile().orElse("") );
 		recentProfiles.setValue( FXCollections.observableList(domain.getRecentProfiles()) );
+		hashedPassword.setValue( domain.getHashedPassword().orElse("") );
+		//unhashedPassword.set("");
+		if( domain.getLastUpdatedDateTime().isPresent() ) {
+			lastUpdatedDateTime.setValue(domain.getLastUpdatedDateTime().get());
+		}
 	}
 
 	private void formJDKCommands() {
