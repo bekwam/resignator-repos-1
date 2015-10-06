@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <ImageView pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../images/AboutLogoAndBackground.png" />
+         </image>
+      </ImageView>
+      <VBox prefHeight="200.0" prefWidth="100.0">
+         <children>
+            <Label styleClass="aboutLabel" text="Resignator" />
+            <Label styleClass="aboutLabel" text="A JAR-signing App" />
+         </children>
+         <StackPane.margin>
+            <Insets bottom="60.0" left="40.0" right="40.0" top="60.0" />
+         </StackPane.margin>
+      </VBox>
+      <VBox alignment="TOP_RIGHT" prefHeight="200.0" prefWidth="100.0">
+         <children>
+            <Label styleClass="aboutLabel" text="Release 1.0.0" />
+         </children>
+         <StackPane.margin>
+            <Insets bottom="60.0" left="40.0" right="40.0" top="60.0" />
+         </StackPane.margin>
+      </VBox>
+      <VBox alignment="BOTTOM_CENTER" prefHeight="200.0" prefWidth="100.0">
+         <children>
+            <Label styleClass="aboutLabel" text="Created by Bekwam, Inc © 2015" />
+         </children>
+         <StackPane.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </StackPane.margin>
+      </VBox>
+   </children>
+</StackPane>

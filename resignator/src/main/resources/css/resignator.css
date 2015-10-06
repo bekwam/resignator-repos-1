@@ -25,3 +25,8 @@
 	-fx-border-radius: 4;
 	-fx-background-color: pink;
 }
+
+.aboutLabel {
+    -fx-text-fill: rgb(240,240,240);
+    -fx-font: normal normal 24pt "Franklin Gothic Medium,Verdana,sans-serif"
+}

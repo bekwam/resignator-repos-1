@@ -84,5 +84,8 @@ public class ResignatorBaseView extends GuiceBaseView {
         }
     }
 
-    public Stage getStage() { return stage; }
+    public Stage getStage() { 
+    	Preconditions.checkNotNull(stage);
+    	return stage; 
+    }
 }

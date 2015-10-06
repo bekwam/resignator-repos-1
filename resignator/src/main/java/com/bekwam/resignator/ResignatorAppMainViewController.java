@@ -145,6 +145,9 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     Provider<PasswordController> passwordControllerProvider;
 
     @Inject
+    Provider<AboutController> aboutControllerProvider;
+    
+    @Inject
     @Named("NumRecentProfiles")
     Integer numRecentProfiles = 4;
 
@@ -489,6 +492,24 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
         Stage s = (Stage) sp.getScene().getWindow();
         s.setTitle("ResignatorApp");
+    }
+
+    @FXML
+    public void showAbout() {
+    	
+    	if( logger.isDebugEnabled() ) {
+    		logger.debug("[SHOW ABOUT]");
+    	}
+    	
+    	AboutController about = aboutControllerProvider.get();  // singleton
+
+        try {
+        	
+       		about.showAndWait();
+        	
+        } catch ( Exception exc) {
+            logger.error("error showing about screen", exc);
+        }
     }
 
     @FXML
