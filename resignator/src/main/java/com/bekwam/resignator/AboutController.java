@@ -15,9 +15,9 @@
  */
 package com.bekwam.resignator;
 
-import javax.inject.Singleton;
-
 import com.bekwam.jfxbop.view.Viewable;
+
+import javax.inject.Singleton;
 
 /**
  * JavaFX Controller and view component for the About screen
@@ -32,4 +32,12 @@ import com.bekwam.jfxbop.view.Viewable;
 @Singleton
 public class AboutController extends ResignatorBaseView {
 
+    @Override
+    protected void postInit() throws Exception {
+        super.postInit();
+        stage.setMinWidth(650.0d);
+        stage.setMinHeight(700.0d);
+        stage.setMaxWidth(1024.0d);
+        stage.setMaxHeight(768.0d);
+    }
 }

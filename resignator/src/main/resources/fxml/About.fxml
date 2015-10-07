@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.effect.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import java.lang.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
    <children>
       <ImageView pickOnBounds="true" preserveRatio="true">
          <image>
@@ -17,8 +15,16 @@
       </ImageView>
       <VBox prefHeight="200.0" prefWidth="100.0">
          <children>
-            <Label styleClass="aboutLabel" text="Resignator" />
-            <Label styleClass="aboutLabel" text="A JAR-signing App" />
+            <Label styleClass="aboutLabel" text="Resignator">
+               <effect>
+                  <DropShadow/>
+               </effect>
+            </Label>
+            <Label styleClass="aboutLabel" text="A JAR-signing App">
+               <effect>
+                  <DropShadow/>
+               </effect>
+            </Label>
          </children>
          <StackPane.margin>
             <Insets bottom="60.0" left="40.0" right="40.0" top="60.0" />
@@ -26,7 +32,11 @@
       </VBox>
       <VBox alignment="TOP_RIGHT" prefHeight="200.0" prefWidth="100.0">
          <children>
-            <Label styleClass="aboutLabel" text="Release 1.0.0" />
+            <Label styleClass="aboutLabel" text="Release 1.0.0">
+               <effect>
+                  <DropShadow/>
+               </effect>
+            </Label>
          </children>
          <StackPane.margin>
             <Insets bottom="60.0" left="40.0" right="40.0" top="60.0" />
@@ -34,7 +44,11 @@
       </VBox>
       <VBox alignment="BOTTOM_CENTER" prefHeight="200.0" prefWidth="100.0">
          <children>
-            <Label styleClass="aboutLabel" text="Created by Bekwam, Inc © 2015" />
+            <Label styleClass="aboutLabel" text="Created by Bekwam, Inc © 2015">
+               <effect>
+                  <DropShadow/>
+               </effect>
+            </Label>
          </children>
          <StackPane.margin>
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
