@@ -22,7 +22,8 @@ public class ResignatorModule extends AbstractModule {
     private final static String CONFIG_DIR = ".resignator";
     private final static String CONFIG_FILE = "resignator.json";
     private final static Integer NUM_RECENT_PROFILES = 4;
-
+    private final static String HELP_LINK = "http://www.bekwam.com/resignator/help.html";
+    
     @Override
     protected void configure() {
 
@@ -37,7 +38,8 @@ public class ResignatorModule extends AbstractModule {
         bind(String.class).annotatedWith(Names.named("ConfigDir")).toInstance(CONFIG_DIR);
         bind(String.class).annotatedWith(Names.named("ConfigFile")).toInstance(CONFIG_FILE);
         bind(Integer.class).annotatedWith(Names.named("NumRecentProfiles")).toInstance(NUM_RECENT_PROFILES);
-
+        bind(String.class).annotatedWith(Names.named("HelpLink")).toInstance(HELP_LINK);
+        
         bind(ConfigurationDataSource.class).to(ConfigurationDataSourceImpl.class);
     }
 }
