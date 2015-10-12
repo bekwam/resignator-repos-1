@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -290,12 +291,24 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
             if( logger.isDebugEnabled() ) {
                 logger.debug("[INIT FS] serializing empty config object to file for first time");
             }
+            activeConf.setLastUpdatedDateTime(LocalDateTime.now());
             saveConfiguration();  // empty config
         }
     }
 
     @Override
     public Configuration getConfiguration() { return configuration.get(); }
+
+    /**
+     * Not exposed outside of package or impl.
+     * <p/>
+     * Intended for unit tests
+     *
+     * @param configuration
+     */
+    void setConfiguration(Optional<Configuration> configuration) {
+        this.configuration = configuration;
+    }
 
     @Override
     public void deleteProfile(String profileName) throws IOException {
@@ -429,16 +442,5 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
             return configuration.get().getHashedPassword().filter( (p) -> StringUtils.isNotBlank(p) ).isPresent();
         }
         return false;
-    }
-
-    /**
-     * Not exposed outside of package or impl.
-     *
-     * Intended for unit tests
-     *
-     * @param configuration
-     */
-    void setConfiguration(Optional<Configuration> configuration) {
-        this.configuration = configuration;
     }
 }
