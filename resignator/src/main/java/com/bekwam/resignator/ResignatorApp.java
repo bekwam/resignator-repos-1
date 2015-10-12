@@ -19,6 +19,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import javafx.application.Application;
 import javafx.scene.control.Alert;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
@@ -42,6 +43,13 @@ public class ResignatorApp extends Application {
         if( logger.isDebugEnabled() ) {
             logger.debug("[START] starting app");
         }
+
+        primaryStage.setTitle("Resignator");
+        
+        primaryStage.getIcons().addAll( 
+        		new Image("/images/Logo16.png", true), 
+        		new Image("/images/Logo32.png", true) 
+        		);
 
         Security.addProvider(new BouncyCastleProvider());
 
