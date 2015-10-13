@@ -331,7 +331,11 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                             mRecentProfiles.getItems().clear();
                             mRecentProfiles.getItems().addAll(FXCollections.observableArrayList(
                                     recentProfiles.stream().
-                                            map((s) -> new MenuItem(s)).
+                                            map((s) -> {
+                                                MenuItem mi = new MenuItem(s);
+                                                mi.setOnAction(recentProfileLoadHandler);
+                                                return mi;
+                                            }).
                                             collect(Collectors.toList())
                             ));
                         }
