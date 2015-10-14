@@ -315,38 +315,51 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
 
                                 activeConfiguration.setUnhashedPassword(pc.getPassword());
                                 configurationDS.decrypt( activeConfiguration.getUnhashedPassword() );
+
+                                //
+                                // init profileBrowser
+                                //
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("[INIT TASK] loading profiles from source");
+                                }
+
+                                long startTimeMillis = System.currentTimeMillis();
+
+                                final List<String> profileNames = configurationDS.getProfiles().
+                                        stream().
+                                        map(Profile::getProfileName).
+                                        sorted((o1, o2) -> o1.compareToIgnoreCase(o2)).
+                                        collect(Collectors.toList());
+
+                                final List<String> recentProfiles = configurationDS.getRecentProfileNames();
+
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("[INIT TASK] loading profiles into UI");
+                                }
+
+                                lvProfiles.setItems(FXCollections.observableArrayList(profileNames));
+
+                                if (CollectionUtils.isNotEmpty(recentProfiles)) {
+                                    mRecentProfiles.getItems().clear();
+                                    mRecentProfiles.getItems().addAll(FXCollections.observableArrayList(
+                                            recentProfiles.stream().
+                                                    map((s) -> {
+                                                        MenuItem mi = new MenuItem(s);
+                                                        mi.setOnAction(recentProfileLoadHandler);
+                                                        return mi;
+                                                    }).
+                                                    collect(Collectors.toList())
+                                    ));
+                                }
+
+                                long endTimeMillis = System.currentTimeMillis();
+
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("[INIT TASK] loading profiles took {} ms", (endTimeMillis - startTimeMillis));
+                                }
                             }
                         } );
                     }
-
-                    //
-                    // init profileBrowser
-                    //
-
-                    final List<String> profileNames = configurationDS.getProfiles().
-                            stream().
-                            map(Profile::getProfileName).
-                            sorted((o1, o2) -> o1.compareToIgnoreCase(o2)).
-                            collect(Collectors.toList());
-
-                    final List<String> recentProfiles = configurationDS.getRecentProfileNames();
-
-                    Platform.runLater(() -> {
-                        lvProfiles.setItems(FXCollections.observableArrayList(profileNames));
-
-                        if (CollectionUtils.isNotEmpty(recentProfiles)) {
-                            mRecentProfiles.getItems().clear();
-                            mRecentProfiles.getItems().addAll(FXCollections.observableArrayList(
-                                    recentProfiles.stream().
-                                            map((s) -> {
-                                                MenuItem mi = new MenuItem(s);
-                                                mi.setOnAction(recentProfileLoadHandler);
-                                                return mi;
-                                            }).
-                                            collect(Collectors.toList())
-                            ));
-                        }
-                    });
 
                     return null;
                 }
@@ -361,7 +374,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                 @Override
                 protected void cancelled() {
                     super.cancelled();
-                    logger.error( "task failed", getException());
+                    logger.error("task cancelled", getException());
                     updateMessage("");
                     Platform.runLater(() -> lblStatus.textProperty().unbind());
                 }
