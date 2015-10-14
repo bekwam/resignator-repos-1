@@ -103,7 +103,7 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
                     filter( p -> StringUtils.equalsIgnoreCase(p.getProfileName(), profileName) ).
                     findFirst();
 
-        activeProfile.fromDomain( profile.get() );
+        activeProfile.fromDomain(profile.get());
     }
 
     @Override
@@ -156,13 +156,17 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
 
         File cf = configFile.get();
 
-        Gson gson = new GsonBuilder().
-                            registerTypeAdapter(Configuration.class, new ConfigurationJSONAdapter()).
-                            create();
-        Configuration cfg = gson.fromJson(new FileReader(cf), Configuration.class);
+        try (
+                FileReader fr = new FileReader(cf)
+        ) {
+            Gson gson = new GsonBuilder().
+                    registerTypeAdapter(Configuration.class, new ConfigurationJSONAdapter()).
+                    create();
+            Configuration cfg = gson.fromJson(fr, Configuration.class);
 
-        configuration = Optional.of(cfg);
-        activeConf.fromDomain(configuration.get());
+            configuration = Optional.of(cfg);
+            activeConf.fromDomain(configuration.get());
+        }
     }
 
     @Override
@@ -241,9 +245,15 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
                 setPrettyPrinting().
                 create();
 
-        JsonWriter jw = new JsonWriter( new FileWriter( configFile.get() ) );
-        gson.toJson( configuration.get(), Configuration.class, jw );
-        jw.close();
+        try (
+                FileWriter fw = new FileWriter(configFile.get())
+        ) {
+            try (
+                    JsonWriter jw = new JsonWriter(fw)
+            ) {
+                gson.toJson(configuration.get(), Configuration.class, jw);
+            }
+        }
     }
 
     private void initFileSystem() throws IOException {
@@ -442,5 +452,15 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
             return configuration.get().getHashedPassword().filter( (p) -> StringUtils.isNotBlank(p) ).isPresent();
         }
         return false;
+    }
+
+    @Override
+    public void deleteDataFile() {
+        if (configFile.isPresent()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[DELETE DATA FILE] deleting {} on exit", configFile.get().getAbsolutePath());
+            }
+            configFile.get().deleteOnExit();
+        }
     }
 }

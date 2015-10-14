@@ -286,20 +286,27 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                                 pc.getStage().hide();
                             }
 
-                            if( pc.wasCancelled() || !pc.doesPasswordMatch() ) {
+                            if (pc.wasCancelled() || pc.wasReset() || !pc.doesPasswordMatch()) {
 
                                 if( logger.isDebugEnabled() ) {
                                     logger.debug("[INIT TASK] was cancelled or the number of retries was exceeded");
                                 }
 
-                                String msg = (!pc.wasCancelled())?"Exceeded maximum number of retries. Exitting...":
-                                        "You must provide a password to the datastore. Exitting...";
+                                String msg = "";
+                                if (pc.wasCancelled()) {
+                                    msg = "You must provide a password to the datastore. Exitting...";
+                                } else if (pc.wasReset()) {
+                                    msg = "Data file removed. Exitting...";
+                                } else {
+                                    msg = "Exceeded maximum number of retries. Exitting...";
+                                }
 
                                 Alert alert = new Alert(
                                     Alert.AlertType.WARNING,
                                     msg);
-                                alert.setOnCloseRequest( (evt) -> Platform.exit());
+                                alert.setOnCloseRequest((evt) -> Platform.exit());
                                 alert.showAndWait();
+
                             } else {
 
                                 //
@@ -307,7 +314,6 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                                 //
 
                                 activeConfiguration.setUnhashedPassword(pc.getPassword());
-
                                 configurationDS.decrypt( activeConfiguration.getUnhashedPassword() );
                             }
                         } );
@@ -316,6 +322,7 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
                     //
                     // init profileBrowser
                     //
+
                     final List<String> profileNames = configurationDS.getProfiles().
                             stream().
                             map(Profile::getProfileName).

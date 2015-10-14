@@ -113,4 +113,9 @@ public interface ConfigurationDataSource {
      * @param passPhrase
      */
     void decrypt(String passPhrase);
+
+    /**
+     * Deletes the resignator.json file; used if password forgotten
+     */
+    void deleteDataFile();
 }
