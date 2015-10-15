@@ -1,53 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.input.*?>
-<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.*?>
-
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
+<VBox xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+      minWidth="-Infinity" xmlns="http://javafx.com/javafx/8"
+      fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
    <children>
       <MenuBar VBox.vgrow="NEVER">
         <menus>
-          <Menu mnemonicParsing="false" text="File">
+            <Menu text="_File">
             <items>
-                  <MenuItem mnemonicParsing="false" onAction="#newProfile" text="New Profile">
+                <MenuItem onAction="#newProfile" text="_New Profile">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="N" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
                      </accelerator></MenuItem>
-                  <MenuItem mnemonicParsing="false" onAction="#loadProfile" text="Load Profile" />
-                <Menu fx:id="mRecentProfiles" mnemonicParsing="false" text="Recent Profiles">
+                <MenuItem onAction="#loadProfile" text="_Load Profile"/>
+                <Menu fx:id="mRecentProfiles" text="_Recent Profiles">
                     <items>
                         <MenuItem mnemonicParsing="false" text="&lt; None &gt;" />
                     </items>
                 </Menu>
                 <SeparatorMenuItem mnemonicParsing="false" />
-                <MenuItem fx:id="miSave" disable="true" mnemonicParsing="false" onAction="#saveProfile" text="Save Profile">
+                <MenuItem fx:id="miSave" disable="true" onAction="#saveProfile" text="_Save Profile">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="S" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
                      </accelerator></MenuItem>
-                  <MenuItem mnemonicParsing="false" onAction="#saveAsProfile" text="Save As Profile" />
+                <MenuItem onAction="#saveAsProfile" text="Save _As Profile"/>
                   <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem mnemonicParsing="false" onAction="#openSettings" text="Settings" />
-                  <MenuItem mnemonicParsing="false" onAction="#changePassword" text="Change Password" />
+                <MenuItem onAction="#openSettings" text="S_ettings"/>
+                <MenuItem onAction="#changePassword" text="_Change Password"/>
                   <SeparatorMenuItem mnemonicParsing="false" />
-              <MenuItem mnemonicParsing="false" onAction="#close" text="Close">
+                <MenuItem onAction="#close" text="Close">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="W" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
                      </accelerator></MenuItem>
             </items>
           </Menu>
-            <Menu mnemonicParsing="false" text="View">
+            <Menu text="_View">
               <items>
-                  <CheckMenuItem mnemonicParsing="false" onAction="#showProfileBrowser" selected="true" text="Show Profile Browser" />
-                  <CheckMenuItem mnemonicParsing="false" onAction="#showConsole" selected="true" text="Show Console" />
+                  <CheckMenuItem onAction="#showProfileBrowser" selected="true" text="Show _Profile Browser"/>
+                  <CheckMenuItem onAction="#showConsole" selected="true" text="Show _Console"/>
               </items>
             </Menu>
-          <Menu mnemonicParsing="false" text="Help">
+            <Menu text="_Help">
             <items>
-              <MenuItem mnemonicParsing="false" onAction="#showAbout" text="About" />
-                  <MenuItem fx:id="miHelp" mnemonicParsing="false" onAction="#showHelp" text="Help" />
+                <MenuItem onAction="#showAbout" text="_About"/>
+                <MenuItem fx:id="miHelp" onAction="#showHelp" text="_Help"/>
             </items>
           </Menu>
         </menus>
