@@ -15,13 +15,37 @@
  */
 package com.bekwam.resignator;
 
-import com.bekwam.jfxbop.guice.GuiceBaseView;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bekwam.jfxbop.view.Viewable;
 import com.bekwam.resignator.commands.SignCommand;
 import com.bekwam.resignator.commands.UnsignCommand;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.bekwam.resignator.model.Profile;
 import com.google.common.base.Preconditions;
+
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -33,38 +57,30 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.TextFieldListCell;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
 
 /**
  * JavaFX Controller and JFXBop View for the Resignator App
@@ -78,7 +94,7 @@ import static java.util.stream.Collectors.toList;
         title = "ResignatorApp"
 )
 @Singleton
-public class ResignatorAppMainViewController extends GuiceBaseView {
+public class ResignatorAppMainViewController extends ResignatorBaseView {
 
     private final static Logger logger = LoggerFactory.getLogger(ResignatorAppMainViewController.class);
 
@@ -114,6 +130,10 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     ListView<String> lvProfiles;
     @FXML
     Menu mRecentProfiles;
+    
+    @FXML
+    MenuItem miHelp;
+    
     @Inject
     ConfigurationDataSource configurationDS;
     private final EventHandler<ActionEvent> recentProfileLoadHandler = (evt) -> doLoadProfile(((MenuItem) evt.getSource()).getText());
@@ -153,14 +173,16 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     @Named("NumRecentProfiles")
     Integer numRecentProfiles = 4;
 
-    @Inject @Named("HelpLink")
-    String helpLink;
+    @Inject 
+    HelpDelegate helpDelegate;
     
     private String jarDir = System.getProperty("user.home");
 
     @FXML
     public void initialize() {
 
+    	miHelp.setAccelerator( KeyCombination.keyCombination("F1") );
+    	
         try {
             activeConfiguration.activeProfileProperty().bindBidirectional(activeProfile.profileNameProperty());
             tfSourceFile.textProperty().bindBidirectional(activeProfile.sourceFileFileNameProperty());
@@ -1548,20 +1570,6 @@ public class ResignatorAppMainViewController extends GuiceBaseView {
     
     @FXML
     public void showHelp() {
-    	
-    	try {
-    		if( logger.isDebugEnabled() ) {
-    			logger.debug("[SHOW HELP] helpLink={}", helpLink);
-    		}
-    		
-			java.awt.Desktop.getDesktop().browse(new URI(helpLink));
-		} catch (IOException | URISyntaxException exc) {
-			logger.error( "error opening helpLink=" + helpLink, exc);
-			
-			Alert alert = new Alert(
-					Alert.AlertType.ERROR,
-					"Cannot open help web page " + helpLink + "; check network connectivity");
-			alert.showAndWait();
-		}
+    	helpDelegate.showHelp();
     }
 }

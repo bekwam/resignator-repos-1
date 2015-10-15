@@ -15,15 +15,21 @@
  */
 package com.bekwam.resignator;
 
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bekwam.jfxbop.guice.GuiceBaseView;
 import com.google.common.base.Preconditions;
+
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author carl_000
@@ -32,10 +38,19 @@ public class ResignatorBaseView extends GuiceBaseView {
 
     private Logger logger = LoggerFactory.getLogger(ResignatorBaseView.class);
 
+    @Inject
+    HelpDelegate helpDelegate;
+    
     @Override
     protected void postInit() throws Exception {
         super.postInit();
         stage.initModality(Modality.APPLICATION_MODAL);
+        
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, (evt) -> {
+        	if( evt.getCode() == KeyCode.F1 ) {
+        		helpDelegate.showHelp();
+        	}
+        });
     }
 
     @Override

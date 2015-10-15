@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.input.*?>
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
@@ -11,7 +12,10 @@
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
-                  <MenuItem mnemonicParsing="false" onAction="#newProfile" text="New Profile" />
+                  <MenuItem mnemonicParsing="false" onAction="#newProfile" text="New Profile">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="N" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
+                     </accelerator></MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#loadProfile" text="Load Profile" />
                 <Menu fx:id="mRecentProfiles" mnemonicParsing="false" text="Recent Profiles">
                     <items>
@@ -19,13 +23,19 @@
                     </items>
                 </Menu>
                 <SeparatorMenuItem mnemonicParsing="false" />
-                <MenuItem fx:id="miSave" disable="true" mnemonicParsing="false" onAction="#saveProfile" text="Save Profile" />
+                <MenuItem fx:id="miSave" disable="true" mnemonicParsing="false" onAction="#saveProfile" text="Save Profile">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="S" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
+                     </accelerator></MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#saveAsProfile" text="Save As Profile" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" onAction="#openSettings" text="Settings" />
                   <MenuItem mnemonicParsing="false" onAction="#changePassword" text="Change Password" />
                   <SeparatorMenuItem mnemonicParsing="false" />
-              <MenuItem mnemonicParsing="false" onAction="#close" text="Close" />
+              <MenuItem mnemonicParsing="false" onAction="#close" text="Close">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="W" control="UP" meta="UP" shift="UP" shortcut="DOWN" />
+                     </accelerator></MenuItem>
             </items>
           </Menu>
             <Menu mnemonicParsing="false" text="View">
@@ -37,7 +47,7 @@
           <Menu mnemonicParsing="false" text="Help">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#showAbout" text="About" />
-                  <MenuItem mnemonicParsing="false" onAction="#showHelp" text="Help" />
+                  <MenuItem fx:id="miHelp" mnemonicParsing="false" onAction="#showHelp" text="Help" />
             </items>
           </Menu>
         </menus>

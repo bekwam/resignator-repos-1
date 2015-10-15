@@ -15,12 +15,25 @@
  */
 package com.bekwam.resignator;
 
-import com.bekwam.jfxbop.guice.GuiceBaseView;
+import java.io.File;
+import java.lang.ref.WeakReference;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bekwam.jfxbop.view.Viewable;
 import com.bekwam.resignator.commands.CommandExecutionException;
 import com.bekwam.resignator.commands.KeytoolCommand;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.google.common.base.Preconditions;
+
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.WeakInvalidationListener;
@@ -28,7 +41,13 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
@@ -36,17 +55,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.io.File;
-import java.lang.ref.WeakReference;
-import java.util.List;
 
 /**
  * Screen dedicated to gathering jarsigner.exe command info
@@ -60,7 +68,7 @@ import java.util.List;
         title = "Jarsigner Config"
 )
 @Singleton
-public class JarsignerConfigController extends GuiceBaseView {
+public class JarsignerConfigController extends ResignatorBaseView {
 
     private final static Logger logger = LoggerFactory.getLogger(JarsignerConfigController.class);
 
