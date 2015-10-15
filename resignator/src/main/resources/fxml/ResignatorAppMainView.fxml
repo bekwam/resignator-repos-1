@@ -98,6 +98,25 @@
                            </tooltip>
                         </TextField>
                         <Button mnemonicParsing="false" onAction="#browseSource" text="Browse" GridPane.columnIndex="2" />
+                         <Label text="Target JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="1"/>
+                         <TextField fx:id="tfTargetFile" onKeyPressed="#clearValidationErrors"
+                                    onMouseClicked="#clearValidationErrors" prefWidth="600.0" GridPane.columnIndex="1"
+                                    GridPane.rowIndex="1">
+                             <tooltip>
+                                 <Tooltip text="Required - The signed JAR (Can be the same as Source JAR)"/>
+                             </tooltip>
+                         </TextField>
+                         <HBox alignment="CENTER_LEFT" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                             <children>
+                                 <Button mnemonicParsing="false" onAction="#browseTarget" text="Browse"
+                                         GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                                 <Button mnemonicParsing="false" onAction="#copySourceToTarget" text="Copy">
+                                     <HBox.margin>
+                                         <Insets left="2.0"/>
+                                     </HBox.margin>
+                                 </Button>
+                             </children>
+                         </HBox>
                          <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="2">
                            <children>
                                <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure">
@@ -120,22 +139,6 @@
                                     <Insets left="10.0" />
                                  </HBox.margin>
                               </ProgressIndicator>
-                           </children>
-                        </HBox>
-                        <Label text="Target JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-                        <TextField fx:id="tfTargetFile" onKeyPressed="#clearValidationErrors" onMouseClicked="#clearValidationErrors" prefWidth="600.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                           <tooltip>
-                              <Tooltip text="Required - The signed JAR (Can be the same as Source JAR)" />
-                           </tooltip>
-                        </TextField>
-                        <HBox alignment="CENTER_LEFT" GridPane.columnIndex="2" GridPane.rowIndex="1">
-                           <children>
-                              <Button mnemonicParsing="false" onAction="#browseTarget" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                              <Button mnemonicParsing="false" onAction="#copySourceToTarget" text="Copy">
-                                 <HBox.margin>
-                                    <Insets left="2.0" />
-                                 </HBox.margin>
-                              </Button>
                            </children>
                         </HBox>
                      </children>
