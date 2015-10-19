@@ -26,14 +26,16 @@ public class Profile {
 
     private final String profileName;
     private final Boolean replaceSignatures;
+    private final SigningArgumentsType argsType;
     private Optional<SourceFile> sourceFile = Optional.empty();
     private Optional<TargetFile> targetFile = Optional.empty();
     private Optional<JarsignerConfig> jarsignerConfig = Optional.empty();
-
-    public Profile(String profileName, Boolean replaceSignatures) {
+    
+    public Profile(String profileName, Boolean replaceSignatures, SigningArgumentsType argsType) {
         Preconditions.checkNotNull( profileName );
         this.profileName = profileName;
         this.replaceSignatures = replaceSignatures;
+        this.argsType = argsType;
     }
 
     public String getProfileName() {
@@ -68,6 +70,8 @@ public class Profile {
         return replaceSignatures;
     }
 
+    public SigningArgumentsType getArgsType() { return argsType; }
+    
     @Override
     public String toString() {
         return "Profile{" +
@@ -76,6 +80,7 @@ public class Profile {
                 ", targetFile=" + targetFile +
                 ", jarsignerConfig=" + jarsignerConfig +
                 ", replaceSignatures=" + replaceSignatures +
+                ", argsType=" + argsType +
                 '}';
     }
 

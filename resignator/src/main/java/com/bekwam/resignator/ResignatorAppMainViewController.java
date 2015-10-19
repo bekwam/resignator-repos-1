@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -44,6 +45,7 @@ import com.bekwam.resignator.commands.SignCommand;
 import com.bekwam.resignator.commands.UnsignCommand;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.bekwam.resignator.model.Profile;
+import com.bekwam.resignator.model.SigningArgumentsType;
 import com.google.common.base.Preconditions;
 
 import javafx.animation.FadeTransition;
@@ -61,6 +63,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
@@ -78,9 +81,11 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
 
 /**
  * JavaFX Controller and JFXBop View for the Resignator App
@@ -103,7 +108,11 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
     private final InvalidationListener needsSaveListener = (evt) -> needsSave.set(true);
     private final MenuItem MI_NO_PROFILES = new MenuItem("< None >");
     private final int MAX_WAIT_TIME = 10 * 60 * 1000;  // 10 minutes
-
+    private final String SOURCE_LABEL_JAR = "Source JAR:";
+    private final String TARGET_LABEL_JAR = "Target JAR:";
+    private final String SOURCE_LABEL_FOLDER = "Source Folder:";
+    private final String TARGET_LABEL_FOLDER = "Target Folder:";
+    
     @FXML
     SplitPane sp;
     @FXML
@@ -133,6 +142,15 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
     
     @FXML
     MenuItem miHelp;
+    
+    @FXML
+    ChoiceBox<SigningArgumentsType> cbType;
+    
+    @FXML
+    Label lblSource;
+    
+    @FXML
+    Label lblTarget;
     
     @Inject
     ConfigurationDataSource configurationDS;
@@ -181,19 +199,62 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
     @FXML
     public void initialize() {
 
-    	miHelp.setAccelerator( KeyCombination.keyCombination("F1") );
-    	
         try {
-            activeConfiguration.activeProfileProperty().bindBidirectional(activeProfile.profileNameProperty());
+
+        	miHelp.setAccelerator( KeyCombination.keyCombination("F1") );
+        	
+        	cbType.getItems().add( SigningArgumentsType.JAR );
+        	cbType.getItems().add( SigningArgumentsType.FOLDER );
+        	
+        	cbType.getSelectionModel().select( SigningArgumentsType.JAR );
+        	
+        	cbType.setConverter( new StringConverter<SigningArgumentsType>() {
+
+    			@Override
+    			public String toString(SigningArgumentsType type) {
+    				return StringUtils.capitalize(StringUtils.lowerCase(String.valueOf(type)));
+    			}
+
+    			@Override
+    			public SigningArgumentsType fromString(String type) {
+    				return Enum.valueOf(SigningArgumentsType.class, StringUtils.upperCase(type));
+    			}
+        		
+        	});
+        	
+        	activeConfiguration.activeProfileProperty().bindBidirectional(activeProfile.profileNameProperty());
             tfSourceFile.textProperty().bindBidirectional(activeProfile.sourceFileFileNameProperty());
             tfTargetFile.textProperty().bindBidirectional(activeProfile.targetFileFileNameProperty());
             ckReplace.selectedProperty().bindBidirectional(activeProfile.replaceSignaturesProperty());
-
+            cbType.valueProperty().bindBidirectional(activeProfile.argsTypeProperty());
+            
             miSave.disableProperty().bind(needsSave.not());
 
             tfSourceFile.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
             tfTargetFile.textProperty().addListener(new WeakInvalidationListener(needsSaveListener));
+            ckReplace.selectedProperty().addListener(new WeakInvalidationListener(needsSaveListener));
+            cbType.valueProperty().addListener(new WeakInvalidationListener(needsSaveListener));
 
+            lblSource.setText(SOURCE_LABEL_JAR);
+            lblTarget.setText(TARGET_LABEL_JAR);
+            cbType.getSelectionModel().selectedItemProperty().addListener((ov, old_v, new_v) -> {            	
+            	if( new_v == SigningArgumentsType.FOLDER ) {
+            		if( !lblSource.getText().equalsIgnoreCase(SOURCE_LABEL_FOLDER) ) {
+            			lblSource.setText(SOURCE_LABEL_FOLDER);
+            		}
+            		if( !lblSource.getText().equalsIgnoreCase(TARGET_LABEL_FOLDER) ) {
+            			lblTarget.setText(TARGET_LABEL_FOLDER);
+            		}
+            	} else {
+            		if( !lblSource.getText().equalsIgnoreCase(SOURCE_LABEL_JAR) ) {
+            			lblSource.setText(SOURCE_LABEL_JAR);
+            		}
+            		if( !lblSource.getText().equalsIgnoreCase(TARGET_LABEL_JAR) ) {
+            			lblTarget.setText(TARGET_LABEL_JAR);            	
+            		}
+            	}
+            });
+            
             lvProfiles.getSelectionModel().selectedItemProperty().addListener((ov, old_v, new_v) -> {
 
                 if (new_v == null) {  // coming from clearSelection or sort
@@ -755,6 +816,7 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
                 }
             }
             lvProfiles.getItems().add(pos, newProfileName);
+            lvProfiles.getSelectionModel().select(pos);
         }
     }
 
@@ -894,21 +956,40 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 
         clearValidationErrors();
 
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Source JAR");
-        fileChooser.setInitialDirectory(new File(jarDir));
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("JAR", "*.jar")
-        );
-
-        File f = fileChooser.showOpenDialog(stage);
-        if (f != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("[BROWSE SOURCE] selected file={}", f.getAbsolutePath());
-            }
-            tfSourceFile.setText(f.getAbsolutePath());
-
-            jarDir = FilenameUtils.getFullPath(f.getAbsolutePath());
+        switch(activeProfile.getArgsType() ) {
+	        case JAR:
+		        FileChooser fileChooser = new FileChooser();
+		        fileChooser.setTitle("Select Source JAR");
+		        fileChooser.setInitialDirectory(new File(jarDir));
+		        fileChooser.getExtensionFilters().addAll(
+		                new FileChooser.ExtensionFilter("JAR", "*.jar")
+		        );
+		
+		        File f = fileChooser.showOpenDialog(stage);
+		        if (f != null) {
+		            if (logger.isDebugEnabled()) {
+		                logger.debug("[BROWSE SOURCE] selected file={}", f.getAbsolutePath());
+		            }
+		            tfSourceFile.setText(f.getAbsolutePath());
+		
+		            jarDir = FilenameUtils.getFullPath(f.getAbsolutePath());
+		        }
+		        break;
+	        case FOLDER:
+		        DirectoryChooser dirChooser = new DirectoryChooser();
+		        dirChooser.setTitle("Select Source Folder");
+		        dirChooser.setInitialDirectory(new File(jarDir));
+		
+		        File d = dirChooser.showDialog(stage);
+		        if (d != null) {
+		            if (logger.isDebugEnabled()) {
+		                logger.debug("[BROWSE SOURCE] selected dir={}", d.getAbsolutePath());
+		            }
+		            tfSourceFile.setText(d.getAbsolutePath());
+		
+		            jarDir = FilenameUtils.getFullPath(d.getAbsolutePath());
+		        }
+		        break;
         }
     }
 
@@ -920,23 +1001,42 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 
         clearValidationErrors();
 
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Target JAR");
-        fileChooser.setInitialDirectory(new File(jarDir));
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("JAR", "*.jar")
-        );
-
-        File f = fileChooser.showOpenDialog(stage);
-        if (f != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("[BROWSE TARGET] selected file={}", f.getAbsolutePath());
-            }
-            tfTargetFile.setText(f.getAbsolutePath());
-
-            jarDir = FilenameUtils.getFullPath(f.getAbsolutePath());
+        switch(activeProfile.getArgsType() ) {
+	        case JAR:
+		        FileChooser fileChooser = new FileChooser();
+		        fileChooser.setTitle("Select Target JAR");
+		        fileChooser.setInitialDirectory(new File(jarDir));
+		        fileChooser.getExtensionFilters().addAll(
+		                new FileChooser.ExtensionFilter("JAR", "*.jar")
+		        );
+		
+		        File f = fileChooser.showOpenDialog(stage);
+		        if (f != null) {
+		            if (logger.isDebugEnabled()) {
+		                logger.debug("[BROWSE TARGET] selected file={}", f.getAbsolutePath());
+		            }
+		            tfTargetFile.setText(f.getAbsolutePath());
+		
+		            jarDir = FilenameUtils.getFullPath(f.getAbsolutePath());
+		        }
+		        break;
+	        case FOLDER:
+		        DirectoryChooser dirChooser = new DirectoryChooser();
+		        dirChooser.setTitle("Select Target Folder");
+		        dirChooser.setInitialDirectory(new File(jarDir));
+		
+		        File d = dirChooser.showDialog(stage);
+		        if (d != null) {
+		            if (logger.isDebugEnabled()) {
+		                logger.debug("[BROWSE TARGET] selected dir={}", d.getAbsolutePath());
+		            }
+		            tfTargetFile.setText(d.getAbsolutePath());
+		
+		            jarDir = FilenameUtils.getFullPath(d.getAbsolutePath());
+		        }
+		        break;
         }
-    }
+     }
 
     @FXML
     public void copySourceToTarget() {
@@ -986,7 +1086,7 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 
                 Alert alert = new Alert(
                         Alert.AlertType.ERROR,
-                        "Specified Source JAR does not exist"
+                        "Specified Source " + activeProfile.getArgsType() + " does not exist"
                 );
 
                 alert.showAndWait();
@@ -1006,6 +1106,25 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
             isValid = false;
         }
 
+        if( activeProfile.getArgsType() == SigningArgumentsType.FOLDER ) {
+        
+        	if( StringUtils.equalsIgnoreCase(activeProfile.getSourceFileFileName(), 
+        			activeProfile.getTargetFileFileName()) ) {
+
+                if (!tfTargetFile.getStyleClass().contains("tf-validation-error")) {
+                    tfTargetFile.getStyleClass().add("tf-validation-error");
+                }
+
+                Alert alert = new Alert(
+                        Alert.AlertType.ERROR,
+                        "Source folder and target folder cannot be the same"
+                );
+                alert.showAndWait();
+                
+                isValid = false;
+        	}
+        }
+        
         //
         // #13 Validate the Jarsigner Config form
         //
@@ -1056,6 +1175,58 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
         return isValid;
     }
 
+    private boolean confirmReplaceExisting() {
+        Alert alert = new Alert(
+                Alert.AlertType.CONFIRMATION,
+                "Overwrite any existing signatures in JAR?");
+        alert.setHeaderText("Overwrite signatures");
+        Optional<ButtonType> response = alert.showAndWait();
+        if (!response.isPresent() || response.get() != ButtonType.OK) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[SIGN] overwrite cancelled");
+            }
+            return false;
+        }	
+        return true;
+    }
+    
+    private boolean confirmOverwrite(File[] sourceJars) {
+        List<File> existingFiles = new ArrayList<>();
+        for( File sf : sourceJars ) {
+        	File tf = new File( activeProfile.getTargetFileFileName(), sf.getName() );
+        	if( tf.exists() ) {
+        		existingFiles.add( tf );
+        	}
+        }
+        
+        if( CollectionUtils.isNotEmpty(existingFiles) ) {
+        	
+        	String msg = "Overwrite these files in '" + activeProfile.getTargetFileFileName() + "'?";
+        	msg += System.getProperty("line.separator");
+        	for( File f : existingFiles ) {
+        		msg += System.getProperty("line.separator") + f.getName();
+        	}
+        	
+            Alert alert = new Alert(
+                    Alert.AlertType.CONFIRMATION,
+                    msg);
+            
+            Label msgLabel = new Label( msg );
+            
+            alert.setHeaderText("Overwrite existing files");
+            alert.getDialogPane().setContent( msgLabel );
+            
+            Optional<ButtonType> response = alert.showAndWait();
+            if (!response.isPresent() || response.get() != ButtonType.OK) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[SIGN] overwrite files cancelled");
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+    
     @FXML
     public void sign() {
 
@@ -1075,169 +1246,349 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
         }
 
         final Boolean doUnsign = ckReplace.isSelected();
-
-        //
-        // #2 confirm an overwrite (if needed)
-        //
-        if (doUnsign) {
-            Alert alert = new Alert(
-                    Alert.AlertType.CONFIRMATION,
-                    "Overwrite any existing signatures in JAR?");
-            alert.setHeaderText("Overwrite signatures");
-            Optional<ButtonType> response = alert.showAndWait();
-            if (!response.isPresent() || response.get() != ButtonType.OK) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("[SIGN] overwrite cancelled");
-                }
-                return;
-            }
-        } else {
-
-            //
-            // #6 sign-only to a different target filename needs a copy and
-            // possible overwrite
-            //
-
-            File tf = new File(activeProfile.getTargetFileFileName());
-            if (tf.exists()) {
-                Alert alert = new Alert(
-                        Alert.AlertType.CONFIRMATION,
-                        "Overwrite existing file '" + tf.getName() + "'?");
-                alert.setHeaderText("Overwrite existing file");
-                Optional<ButtonType> response = alert.showAndWait();
-                if (!response.isPresent() || response.get() != ButtonType.OK) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("[SIGN] overwrite file cancelled");
-                    }
-                    return;
-                }
-            }
-        }
-
         UnsignCommand unsignCommand = unsignCommandProvider.get();
         SignCommand signCommand = signCommandProvider.get();
 
-        Task<Void> task = new Task<Void>() {
+        if( activeProfile.getArgsType() == SigningArgumentsType.FOLDER ) {
+        
+        	if( logger.isDebugEnabled() ) {
+        		logger.debug("[SIGN] signing folder full of jars");
+        	}
+        	
+        	//
+        	// Get list of source JARs
+        	//
+        	File[] sourceJars = new File( activeProfile.getSourceFileFileName() )
+        			.listFiles( (d,n) -> StringUtils.endsWithIgnoreCase(n, ".jar")
+        					);
+        	
+        	//
+        	// Report if no jars to sign and exit
+        	//
+        	if( sourceJars == null || sourceJars.length == 0 ) {
+                Alert alert = new Alert(
+                        Alert.AlertType.INFORMATION,
+                        "There aren't any JARs to sign in '" + activeProfile.getTargetFileFileName() + "'");
+                alert.setHeaderText("No JARs to Sign");
+                alert.showAndWait();
+                return;
+        	}
+        	
+        	if( logger.isDebugEnabled() ) {
+        		for( File f : sourceJars ) {
+        			logger.debug("[SIGN] source jar={}, filename={}", f.getAbsolutePath(), f.getName());
+        		}
+        	}
+        	
+        	//
+        	// Confirm replace operation
+        	//
+	        if (doUnsign && !confirmReplaceExisting() ) {
+	        	return;
+	        }
+	        
+	        //
+	        // Confirm overwriting of files
+	        //
+	        if( !confirmOverwrite(sourceJars) ) {
+	        	return;
+	        }
 
-            @Override
-            protected Void call() throws Exception {
+	        //
+	        // This number is applied to the progress bar to report a particular
+	        // iterations unit-of-work (2 operations per jar)
+	        //
+	        double unitFactor = 1.0d / (sourceJars.length * 2.0d);
+	        
+	        Task<Void> task = new Task<Void>() {
+	        	
+	            @Override
+	            protected Void call() throws Exception {
+	
+	            	double accruedProgress = 0.0d;
+	            	
+	            	for( File sf : sourceJars ) {
 
-                updateMessage("");
-                Platform.runLater(() -> piSignProgress.setVisible(true));
-                updateProgress(0.1d, 1.0d);
+	                	File tf = new File( activeProfile.getTargetFileFileName(), sf.getName() );
+	        
+                		if (logger.isDebugEnabled()) {
+                			logger.debug("[SIGN] progress={}", accruedProgress);
+                		}
 
-                if (doUnsign) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("[SIGN] doing unsign operation");
-                    }
-                    updateTitle("Unsigning JAR");
-                    unsignCommand.unsignJAR(
-                            Paths.get(activeProfile.getSourceFileFileName()),
-                            Paths.get(activeProfile.getTargetFileFileName()),
-                            s ->
-                                    Platform.runLater(() ->
-                                                    txtConsole.appendText(s + System.getProperty("line.separator"))
-                                    )
-                    );
+	                	updateMessage("");
+	                	Platform.runLater(() -> piSignProgress.setVisible(true));
+	                	updateProgress(accruedProgress, 1.0d);
+	                	accruedProgress += unitFactor;
 
-                    if (isCancelled()) {
-                        return null;
-                    }
-                } else {
+                		if (doUnsign) {
+	                		if (logger.isDebugEnabled()) {
+	                			logger.debug("[SIGN] doing bulk unsign operation");
+	                		}
+	                		updateTitle("Unsigning JAR");
+	                		unsignCommand.unsignJAR(
+	                            Paths.get(sf.getAbsolutePath()),
+	                            Paths.get(tf.getAbsolutePath()),
+	                            s ->
+	                                    Platform.runLater(() ->
+	                                                    txtConsole.appendText(s + System.getProperty("line.separator"))
+	                                    )
+	                				);
+	
+	                		if (isCancelled()) {
+	                			return null;
+	                		}
+	                    
+	                	} else {
+	
+		                    if (logger.isDebugEnabled()) {
+		                        logger.debug("[SIGN] copying bulk for sign operation");
+		                    }
+		                    updateTitle("Copying JAR");
+		                    Platform.runLater(
+		                            () -> txtConsole.appendText("Copying JAR" + System.getProperty("line.separator"))
+		                    );
+		                    unsignCommand.copyJAR(sf.getAbsolutePath(), tf.getAbsolutePath());
+		                }
+		
+		                updateProgress(accruedProgress, 1.0d);
+	                	accruedProgress += unitFactor;
 
-                    //
-                    // #6 needs a copy to the target if target file doesn't
-                    // exist
-                    //
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("[SIGN] copying for sign operation");
-                    }
-                    updateTitle("Copying JAR");
-                    Platform.runLater(
-                            () -> txtConsole.appendText("Copying JAR" + System.getProperty("line.separator"))
-                    );
-                    unsignCommand.copyJAR(activeProfile.getSourceFileFileName(), activeProfile.getTargetFileFileName());
-                }
-
-                updateProgress(0.5d, 1.0d);
-                updateTitle("Signing JAR");
-
-                signCommand.signJAR(
-                        Paths.get(activeProfile.getTargetFileFileName()),
-                        Paths.get(activeProfile.getJarsignerConfigKeystore()),
-                        activeProfile.getJarsignerConfigStorepass(),
-                        activeProfile.getJarsignerConfigAlias(),
-                        activeProfile.getJarsignerConfigKeypass(),
-                        s ->
-                                Platform.runLater(() ->
-                                                txtConsole.appendText(s + System.getProperty("line.separator"))
-                                )
-                );
-
-                return null;
-            }
-
-            @Override
-            protected void succeeded() {
-                super.succeeded();
-
-                updateProgress(1.0d, 1.0d);
-                updateMessage("JAR signed successfully");
-
-                Platform.runLater(() -> {
-                    piSignProgress.progressProperty().unbind();
-                    lblStatus.textProperty().unbind();
-                });
-            }
-
-            @Override
-            protected void failed() {
-                super.failed();
-
-                logger.error("error unsigning and signing jar", exceptionProperty().getValue());
-
-                updateProgress(1.0d, 1.0d);
-                updateMessage("Error signing JAR");
-
-                Platform.runLater(() -> {
-                    piSignProgress.progressProperty().unbind();
-                    lblStatus.textProperty().unbind();
-
-                    piSignProgress.setVisible(false);
-
-                    Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
-                    alert.showAndWait();
-                });
-            }
-
-            @Override
-            protected void cancelled() {
-                super.cancelled();
-
-                if (logger.isWarnEnabled()) {
-                    logger.warn("signing jar operation cancelled");
-                }
-
-                updateProgress(1.0d, 1.0d);
-                updateMessage("JAR signing cancelled");
-
-                Platform.runLater(() -> {
-                    piSignProgress.progressProperty().unbind();
-                    lblStatus.textProperty().unbind();
-
-                    piSignProgress.setVisible(false);
-
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "JAR signing cancelled");
-                    alert.showAndWait();
-                });
-
-            }
-        };
-
-        piSignProgress.progressProperty().bind(task.progressProperty());
-        lblStatus.textProperty().bind(task.messageProperty());
-
-        new Thread(task).start();
+		                updateTitle("Signing JAR");
+		
+		                signCommand.signJAR(
+		                        Paths.get(tf.getAbsolutePath()),
+		                        Paths.get(activeProfile.getJarsignerConfigKeystore()),
+		                        activeProfile.getJarsignerConfigStorepass(),
+		                        activeProfile.getJarsignerConfigAlias(),
+		                        activeProfile.getJarsignerConfigKeypass(),
+		                        s ->
+		                                Platform.runLater(() ->
+		                                                txtConsole.appendText(s + System.getProperty("line.separator"))
+		                                )
+		                );
+	            	}
+	            	
+	                return null;
+	            }
+	
+	            @Override
+	            protected void succeeded() {
+	                super.succeeded();
+	
+	                updateProgress(1.0d, 1.0d);
+	                updateMessage("JARs signed successfully");
+	
+	                Platform.runLater(() -> {
+	                    piSignProgress.progressProperty().unbind();
+	                    lblStatus.textProperty().unbind();
+	                });
+	            }
+	
+	            @Override
+	            protected void failed() {
+	                super.failed();
+	
+	                logger.error("error unsigning and signing jar", exceptionProperty().getValue());
+	
+	                updateProgress(1.0d, 1.0d);
+	                updateMessage("Error signing JARs");
+	
+	                Platform.runLater(() -> {
+	                    piSignProgress.progressProperty().unbind();
+	                    lblStatus.textProperty().unbind();
+	
+	                    piSignProgress.setVisible(false);
+	
+	                    Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
+	                    alert.showAndWait();
+	                });
+	            }
+	
+	            @Override
+	            protected void cancelled() {
+	                super.cancelled();
+	
+	                if (logger.isWarnEnabled()) {
+	                    logger.warn("signing jar operation cancelled");
+	                }
+	
+	                updateProgress(1.0d, 1.0d);
+	                updateMessage("JARs signing cancelled");
+	
+	                Platform.runLater(() -> {
+	                    piSignProgress.progressProperty().unbind();
+	                    lblStatus.textProperty().unbind();
+	
+	                    piSignProgress.setVisible(false);
+	
+	                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "JARs signing cancelled");
+	                    alert.showAndWait();
+	                });
+	
+	            }
+	        };
+	
+	        piSignProgress.progressProperty().bind(task.progressProperty());
+	        lblStatus.textProperty().bind(task.messageProperty());
+	
+	        new Thread(task).start();
+	        
+        } else {
+        	
+        	if( logger.isDebugEnabled() ) {
+        		logger.debug("[SIGN] signing single JAR");
+        	}
+        	
+	        //
+	        // #2 confirm an overwrite (if needed); factored 
+	        //
+	        if (doUnsign && !confirmReplaceExisting() ) {
+	        	return;
+	        } else {
+	
+	            //
+	            // #6 sign-only to a different target filename needs a copy and
+	            // possible overwrite
+	            //
+	
+	            File tf = new File(activeProfile.getTargetFileFileName());
+	            if (tf.exists()) {
+	                Alert alert = new Alert(
+	                        Alert.AlertType.CONFIRMATION,
+	                        "Overwrite existing file '" + tf.getName() + "'?");
+	                alert.setHeaderText("Overwrite existing file");
+	                Optional<ButtonType> response = alert.showAndWait();
+	                if (!response.isPresent() || response.get() != ButtonType.OK) {
+	                    if (logger.isDebugEnabled()) {
+	                        logger.debug("[SIGN] overwrite file cancelled");
+	                    }
+	                    return;
+	                }
+	            }
+	        }
+	
+	        Task<Void> task = new Task<Void>() {
+	
+	            @Override
+	            protected Void call() throws Exception {
+	
+	                updateMessage("");
+	                Platform.runLater(() -> piSignProgress.setVisible(true));
+	                updateProgress(0.1d, 1.0d);
+	
+	                if (doUnsign) {
+	                    if (logger.isDebugEnabled()) {
+	                        logger.debug("[SIGN] doing unsign operation");
+	                    }
+	                    updateTitle("Unsigning JAR");
+	                    unsignCommand.unsignJAR(
+	                            Paths.get(activeProfile.getSourceFileFileName()),
+	                            Paths.get(activeProfile.getTargetFileFileName()),
+	                            s ->
+	                                    Platform.runLater(() ->
+	                                                    txtConsole.appendText(s + System.getProperty("line.separator"))
+	                                    )
+	                    );
+	
+	                    if (isCancelled()) {
+	                        return null;
+	                    }
+	                } else {
+	
+	                    //
+	                    // #6 needs a copy to the target if target file doesn't
+	                    // exist
+	                    //
+	                    if (logger.isDebugEnabled()) {
+	                        logger.debug("[SIGN] copying for sign operation");
+	                    }
+	                    updateTitle("Copying JAR");
+	                    Platform.runLater(
+	                            () -> txtConsole.appendText("Copying JAR" + System.getProperty("line.separator"))
+	                    );
+	                    unsignCommand.copyJAR(activeProfile.getSourceFileFileName(), activeProfile.getTargetFileFileName());
+	                }
+	
+	                updateProgress(0.5d, 1.0d);
+	                updateTitle("Signing JAR");
+	
+	                signCommand.signJAR(
+	                        Paths.get(activeProfile.getTargetFileFileName()),
+	                        Paths.get(activeProfile.getJarsignerConfigKeystore()),
+	                        activeProfile.getJarsignerConfigStorepass(),
+	                        activeProfile.getJarsignerConfigAlias(),
+	                        activeProfile.getJarsignerConfigKeypass(),
+	                        s ->
+	                                Platform.runLater(() ->
+	                                                txtConsole.appendText(s + System.getProperty("line.separator"))
+	                                )
+	                );
+	
+	                return null;
+	            }
+	
+	            @Override
+	            protected void succeeded() {
+	                super.succeeded();
+	
+	                updateProgress(1.0d, 1.0d);
+	                updateMessage("JAR signed successfully");
+	
+	                Platform.runLater(() -> {
+	                    piSignProgress.progressProperty().unbind();
+	                    lblStatus.textProperty().unbind();
+	                });
+	            }
+	
+	            @Override
+	            protected void failed() {
+	                super.failed();
+	
+	                logger.error("error unsigning and signing jar", exceptionProperty().getValue());
+	
+	                updateProgress(1.0d, 1.0d);
+	                updateMessage("Error signing JAR");
+	
+	                Platform.runLater(() -> {
+	                    piSignProgress.progressProperty().unbind();
+	                    lblStatus.textProperty().unbind();
+	
+	                    piSignProgress.setVisible(false);
+	
+	                    Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
+	                    alert.showAndWait();
+	                });
+	            }
+	
+	            @Override
+	            protected void cancelled() {
+	                super.cancelled();
+	
+	                if (logger.isWarnEnabled()) {
+	                    logger.warn("signing jar operation cancelled");
+	                }
+	
+	                updateProgress(1.0d, 1.0d);
+	                updateMessage("JAR signing cancelled");
+	
+	                Platform.runLater(() -> {
+	                    piSignProgress.progressProperty().unbind();
+	                    lblStatus.textProperty().unbind();
+	
+	                    piSignProgress.setVisible(false);
+	
+	                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "JAR signing cancelled");
+	                    alert.showAndWait();
+	                });
+	
+	            }
+	        };
+	
+	        piSignProgress.progressProperty().bind(task.progressProperty());
+	        lblStatus.textProperty().bind(task.messageProperty());
+	
+	        new Thread(task).start();
+        }
     }
 
 

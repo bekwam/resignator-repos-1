@@ -55,8 +55,8 @@ public class UnsignCommand {
         //
         // Verify source jar
         //
-        observer.accept("Verifying source JAR");
         File sourceJarFile = verifySource(sourceJARFile);
+        observer.accept("Verifying source JAR '" + sourceJarFile.getName() + "'");
 
         if(logger.isDebugEnabled() ) {
             logger.debug("[UNSIGN] source jar file name={}", sourceJarFile.getName());
@@ -79,14 +79,14 @@ public class UnsignCommand {
         //
         // Copy jarFile to temp folder
         //
-        observer.accept("Copying JAR");
+        observer.accept("Copying JAR '" + sourceJarFile.getName() + "'");
         Path workingJarFile = copyJAR(sourceJarFile);
 
         //
         // Unpack JAR
         //
-        observer.accept("Unpacking JAR");
         unJAR(workingJarFile.toString(), tempDir);
+        observer.accept("Unpacking JAR '" + workingJarFile.toString() + "'");
         observer.accept("Deleting working JAR file");
         workingJarFile.toFile().delete();  // don't include for later re-jar operation
 
@@ -106,7 +106,7 @@ public class UnsignCommand {
         //
         // Repack JAR
         //
-        observer.accept("Repacking JAR");
+        observer.accept("Repacking JAR '" + targetJARFile.toString() + "'");
         repackJAR(targetJARFile, appDir);
     }
 

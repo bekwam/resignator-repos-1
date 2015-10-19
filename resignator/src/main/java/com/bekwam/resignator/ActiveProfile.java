@@ -15,17 +15,22 @@
  */
 package com.bekwam.resignator;
 
-import com.bekwam.resignator.model.JarsignerConfig;
-import com.bekwam.resignator.model.Profile;
-import com.bekwam.resignator.model.SourceFile;
-import com.bekwam.resignator.model.TargetFile;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import java.util.Optional;
 
 import javax.inject.Singleton;
-import java.util.Optional;
+
+import com.bekwam.resignator.model.JarsignerConfig;
+import com.bekwam.resignator.model.Profile;
+import com.bekwam.resignator.model.SigningArgumentsType;
+import com.bekwam.resignator.model.SourceFile;
+import com.bekwam.resignator.model.TargetFile;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 /**
  * @author carl_000
@@ -42,7 +47,8 @@ public class ActiveProfile implements ActiveRecord<Profile> {
     private StringProperty jarsignerConfigKeystore = new SimpleStringProperty("");
     private BooleanProperty jarsignerConfigVerbose = new SimpleBooleanProperty(Boolean.FALSE);
     private BooleanProperty replaceSignatures = new SimpleBooleanProperty(Boolean.FALSE);
-
+    private ObjectProperty<SigningArgumentsType> argsType = new SimpleObjectProperty<SigningArgumentsType>(SigningArgumentsType.JAR);
+    
     public String getProfileName() { return profileName.get(); }
     public void setProfileName(String profileName_s) { profileName.set(profileName_s); }
 
@@ -75,6 +81,9 @@ public class ActiveProfile implements ActiveRecord<Profile> {
         replaceSignatures.set(replaceSignatures_b);
     }
 
+    public SigningArgumentsType getArgsType() { return argsType.get(); }
+    public void setArgsType(SigningArgumentsType argsType_e) { argsType.set(argsType_e); }
+    
     public StringProperty profileNameProperty() { return profileName; }
     public StringProperty sourceFileFileNameProperty() { return sourceFileFileName; }
     public StringProperty targetFileFileNameProperty() { return targetFileFileName; }
@@ -88,6 +97,8 @@ public class ActiveProfile implements ActiveRecord<Profile> {
         return replaceSignatures;
     }
 
+    public ObjectProperty<SigningArgumentsType> argsTypeProperty() { return argsType; }
+    
     @Override
     public void reset() {
         profileName.setValue("");
@@ -99,12 +110,13 @@ public class ActiveProfile implements ActiveRecord<Profile> {
         jarsignerConfigKeystore.setValue("");
         jarsignerConfigVerbose.setValue(Boolean.FALSE);
         replaceSignatures.setValue(Boolean.FALSE);
+        argsType.setValue(SigningArgumentsType.JAR);
     }
 
     @Override
     public Profile toDomain() {
 
-        Profile p = new Profile(profileName.get(), replaceSignatures.get());
+        Profile p = new Profile(profileName.get(), replaceSignatures.get(), argsType.get());
 
         SourceFile sf = new SourceFile( sourceFileFileName.get() );
         p.setSourceFile(Optional.of(sf));
@@ -128,7 +140,8 @@ public class ActiveProfile implements ActiveRecord<Profile> {
 
         profileName.set( p.getProfileName() );
         replaceSignatures.set(p.getReplaceSignatures());
-
+        argsType.set( p.getArgsType() );
+        
         sourceFileFileName.set(p.getSourceFile().orElse(new SourceFile("")).getFileName());
         targetFileFileName.set(p.getTargetFile().orElse(new TargetFile("")).getFileName());
 

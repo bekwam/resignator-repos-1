@@ -67,7 +67,7 @@ public class SignCommand {
 
         Preconditions.checkNotNull(activeConfiguration.getJarsignerCommand() );
 
-        observer.accept("Running jarsigner command");
+        observer.accept("Running jarsigner command on '" + jarFilePath.toString() + "'");
 
         String[] cmdAndArgs = {
                 activeConfiguration.getJarsignerCommand().toString(),

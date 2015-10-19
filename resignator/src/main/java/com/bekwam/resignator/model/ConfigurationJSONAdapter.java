@@ -116,7 +116,15 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
                 rs = profileObj.get("replaceSignatures").getAsBoolean();
             }
 
-            Profile p = new Profile(profileName, rs);
+            SigningArgumentsType argsType = SigningArgumentsType.JAR;
+            if( profileObj.get("argsType") != null ) {
+            	String at = profileObj.get("argsType").getAsString();
+            	if( StringUtils.equalsIgnoreCase(at, String.valueOf(SigningArgumentsType.FOLDER)) ) {
+            		argsType = SigningArgumentsType.FOLDER;
+            	}
+            }
+            
+            Profile p = new Profile(profileName, rs, argsType);
 
             //
             // SourceFile part
@@ -246,7 +254,8 @@ public class ConfigurationJSONAdapter implements JsonDeserializer<Configuration>
 
             profileObj.addProperty("profileName", p.getProfileName());
             profileObj.addProperty("replaceSignatures", p.getReplaceSignatures());
-
+            profileObj.addProperty("argsType", String.valueOf(p.getArgsType()));
+            
             if( p.getSourceFile().isPresent() ) {
                 SourceFile sf = p.getSourceFile().get();
                 JsonObject sfObj = new JsonObject();

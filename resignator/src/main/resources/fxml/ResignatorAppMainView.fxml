@@ -81,24 +81,25 @@
                <items>
                   <GridPane hgap="10.0" SplitPane.resizableWithParent="false">
                     <columnConstraints>
-                      <ColumnConstraints minWidth="70.0" />
+                      <ColumnConstraints minWidth="140.0" />
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="110.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="180.0" />
                     </columnConstraints>
                     <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <Label text="Source JAR:" GridPane.halignment="RIGHT" />
-                        <TextField fx:id="tfSourceFile" onKeyPressed="#clearValidationErrors" onMouseClicked="#clearValidationErrors" prefWidth="600.0" GridPane.columnIndex="1">
+                        <Label fx:id="lblSource" text="Source JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+                        <TextField fx:id="tfSourceFile" onKeyPressed="#clearValidationErrors" onMouseClicked="#clearValidationErrors" prefWidth="600.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                            <tooltip>
                               <Tooltip text="Required - The JAR to sign" />
                            </tooltip>
                         </TextField>
-                        <Button mnemonicParsing="false" onAction="#browseSource" text="Browse" GridPane.columnIndex="2" />
-                         <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                        <Button mnemonicParsing="false" onAction="#browseSource" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                         <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="3">
                            <children>
                                <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure">
                                    <HBox.margin>
@@ -122,13 +123,13 @@
                               </ProgressIndicator>
                            </children>
                         </HBox>
-                        <Label text="Target JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-                        <TextField fx:id="tfTargetFile" onKeyPressed="#clearValidationErrors" onMouseClicked="#clearValidationErrors" prefWidth="600.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <Label fx:id="lblTarget" text="Target JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+                        <TextField fx:id="tfTargetFile" onKeyPressed="#clearValidationErrors" onMouseClicked="#clearValidationErrors" prefWidth="600.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                            <tooltip>
                               <Tooltip text="Required - The signed JAR (Can be the same as Source JAR)" />
                            </tooltip>
                         </TextField>
-                        <HBox alignment="CENTER_LEFT" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                        <HBox alignment="CENTER_LEFT" GridPane.columnIndex="2" GridPane.rowIndex="2">
                            <children>
                               <Button mnemonicParsing="false" onAction="#browseTarget" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                               <Button mnemonicParsing="false" onAction="#copySourceToTarget" text="Copy">
@@ -138,6 +139,8 @@
                               </Button>
                            </children>
                         </HBox>
+                        <Label text="Type:" GridPane.halignment="RIGHT" />
+                        <ChoiceBox fx:id="cbType" prefWidth="150.0" GridPane.columnIndex="1" />
                      </children>
                      <VBox.margin>
                         <Insets />

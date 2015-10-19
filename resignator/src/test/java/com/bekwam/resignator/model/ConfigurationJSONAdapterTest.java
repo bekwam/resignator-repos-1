@@ -86,7 +86,7 @@ public class ConfigurationJSONAdapterTest {
         conf.setActiveProfile(Optional.of("a"));
         conf.getRecentProfiles().add("a");
 
-        Profile p = new Profile("a", Boolean.FALSE);
+        Profile p = new Profile("a", Boolean.FALSE, SigningArgumentsType.JAR);
 
         SourceFile sf = new SourceFile("C:\\jars\\mycode.jar");
         p.setSourceFile(Optional.of(sf));

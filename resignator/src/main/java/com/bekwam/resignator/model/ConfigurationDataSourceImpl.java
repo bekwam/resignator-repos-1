@@ -336,7 +336,7 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
                 );
             }
 
-            Profile key = new Profile(profileName, false);
+            Profile key = new Profile(profileName, false, SigningArgumentsType.JAR);  // argsType not important
             configuration.get().getProfiles().remove(key);
             configuration.get().getRecentProfiles().remove( profileName );
 
@@ -413,7 +413,7 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
                 for (int j = 0; j < configuration.get().getProfiles().size(); j++) {
                     Profile p = configuration.get().getProfiles().get(j);
                     if (StringUtils.equalsIgnoreCase(p.getProfileName(), oldProfileName)) {
-                        Profile np = new Profile(newProfileName, p.getReplaceSignatures());
+                        Profile np = new Profile(newProfileName, p.getReplaceSignatures(), p.getArgsType());
                         np.setSourceFile(p.getSourceFile());
                         np.setTargetFile(p.getTargetFile());
                         np.setJarsignerConfig(p.getJarsignerConfig());
