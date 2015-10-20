@@ -23,7 +23,8 @@ public class ResignatorModule extends AbstractModule {
     private final static String CONFIG_FILE = "resignator.json";
     private final static Integer NUM_RECENT_PROFILES = 4;
     private final static String HELP_LINK = "http://www.bekwam.com/resignator/help.html";
-    
+    private final static Integer UNSIGN_TIMEOUT = 60;  // 60 seconds
+
     @Override
     protected void configure() {
 
@@ -39,7 +40,8 @@ public class ResignatorModule extends AbstractModule {
         bind(String.class).annotatedWith(Names.named("ConfigFile")).toInstance(CONFIG_FILE);
         bind(Integer.class).annotatedWith(Names.named("NumRecentProfiles")).toInstance(NUM_RECENT_PROFILES);
         bind(String.class).annotatedWith(Names.named("HelpLink")).toInstance(HELP_LINK);
-        
+        bind(Integer.class).annotatedWith(Names.named("UnsignTimeout")).toInstance(UNSIGN_TIMEOUT);
+
         bind(ConfigurationDataSource.class).to(ConfigurationDataSourceImpl.class);
     }
 }

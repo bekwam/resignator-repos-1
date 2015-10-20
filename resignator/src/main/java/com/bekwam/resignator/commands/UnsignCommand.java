@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -37,14 +38,21 @@ import java.util.function.Consumer;
  */
 public class UnsignCommand {
 
-    private Logger logger = LoggerFactory.getLogger(UnsignCommand.class);
-
     @Inject
     ActiveConfiguration activeConfiguration;
-
-    private final int TIMEOUT_SECS = 10;
-
+    @Inject
+    @Named("UnsignTimeout")
+    Integer unsignTimeout;
+    private Logger logger = LoggerFactory.getLogger(UnsignCommand.class);
     private Path tempDir = null;
+
+    public static void main(String[] args) throws Exception {
+        UnsignCommand cmd = new UnsignCommand();
+        cmd.unsignJAR(
+                Paths.get("C:\\Users\\carl_000\\git\\resignator-repos-1\\resignator\\mavenpomupdater-1.3.1.jar"),
+                Paths.get("C:\\Users\\carl_000\\.resignator\\myoutputjar.jar"),
+                s -> System.out.println(s));
+    }
 
     public void unsignJAR(Path sourceJARFile, Path targetJARFile, Consumer<String> observer) throws CommandExecutionException {
 
@@ -197,18 +205,18 @@ public class UnsignCommand {
 
     	Path sourceJarFile = Paths.get(sourceJarFileName);
     	Path targetJarFile = Paths.get(targetJarFileName);
-    	
+
         try {
 
         	Files.copy(sourceJarFile, targetJarFile, StandardCopyOption.REPLACE_EXISTING);
-            
+
         } catch(IOException exc) {
             String msg = String.format("can't copy %s to %s", sourceJarFileName, targetJarFileName);
             logger.error( msg, exc );
             throw new CommandExecutionException( msg );
-        }    	
+        }
     }
-    
+
     private void removeSigs(File metaInfDir) {
         File[] sfFiles = metaInfDir.listFiles(
                 pathname -> StringUtils.endsWith(pathname.getName(), ".SF")
@@ -289,15 +297,7 @@ public class UnsignCommand {
 
         Path defaultWorkingDir = Paths.get(System.getProperty("user.dir"));
 
-        CommandExecutor cmd = new CommandExecutor(TIMEOUT_SECS, tempDir, defaultWorkingDir);
+        CommandExecutor cmd = new CommandExecutor(unsignTimeout, tempDir, defaultWorkingDir);
         cmd.exec(cmdAndArgs);
-    }
-
-    public static void main(String[] args) throws Exception {
-        UnsignCommand cmd = new UnsignCommand();
-        cmd.unsignJAR(
-                Paths.get("C:\\Users\\carl_000\\git\\resignator-repos-1\\resignator\\mavenpomupdater-1.3.1.jar"),
-                Paths.get("C:\\Users\\carl_000\\.resignator\\myoutputjar.jar"),
-                s -> System.out.println(s));
     }
 }
