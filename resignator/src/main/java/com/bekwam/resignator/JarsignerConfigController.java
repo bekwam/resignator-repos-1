@@ -258,6 +258,7 @@ public class JarsignerConfigController extends ResignatorBaseView {
 							}
 
 							cbAlias.setDisable(false);  // might be an empty list for empty keystore
+							cbAlias.requestFocus();  // leave the PasswordField
 							hboxAliasProgress.setVisible( false );
 						});
 
@@ -355,6 +356,10 @@ public class JarsignerConfigController extends ResignatorBaseView {
     @FXML
 	public void verifyStorepass() {
 
+    	if( logger.isDebugEnabled() ) {
+    		logger.debug("[VERIFY SP]");
+    	}
+    	
 		Preconditions.checkNotNull(pfStorepass.textProperty());
 		Preconditions.checkNotNull(pfConfStorepass.textProperty());
 
