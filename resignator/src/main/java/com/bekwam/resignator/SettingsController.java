@@ -212,7 +212,7 @@ public class SettingsController extends GuiceBaseView {
                     logger.debug("[VAL JDKHOME] cmd={}", cmd.toString());
                 }
 
-                Process p = Runtime.getRuntime().exec(cmd.toString());
+                Process p = Runtime.getRuntime().exec(new String[]{cmd.toString()});
 
                 int exitValue = p.waitFor();
 
