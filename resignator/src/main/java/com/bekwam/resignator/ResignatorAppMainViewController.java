@@ -412,6 +412,17 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
                                     ));
                                 }
 
+                                //
+                                // #31 preload the last active profile
+                                //
+                                if (StringUtils.isNotEmpty(activeConfiguration.getActiveProfile())) {
+
+                                    if (logger.isDebugEnabled()) {
+                                        logger.debug("[INIT TASK] preloading last active profile={}", activeConfiguration.getActiveProfile());
+                                    }
+                                    doLoadProfile(activeConfiguration.getActiveProfile());
+                                }
+
                                 long endTimeMillis = System.currentTimeMillis();
 
                                 if (logger.isDebugEnabled()) {
