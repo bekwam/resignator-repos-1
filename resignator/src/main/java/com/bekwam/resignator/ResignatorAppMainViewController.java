@@ -364,7 +364,10 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
                                 Alert alert = new Alert(
                                     Alert.AlertType.WARNING,
                                     msg);
-                                alert.setOnCloseRequest((evt) -> Platform.exit());
+                                alert.setOnCloseRequest((evt) -> {
+                                	Platform.exit();
+                                	System.exit(1);
+                                });
                                 alert.showAndWait();
 
                             } else {
