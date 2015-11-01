@@ -18,6 +18,7 @@ package com.bekwam.resignator;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
@@ -44,6 +45,8 @@ public class ResignatorApp extends Application {
             logger.debug("[START] starting app");
         }
 
+        Platform.setImplicitExit(false);
+        
         primaryStage.setTitle("Resignator");
         
         primaryStage.getIcons().addAll( 
