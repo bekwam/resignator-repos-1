@@ -576,11 +576,6 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 
     @FXML
     public void close(ActionEvent evt) {
-
-        //
-        // save config prior to exit()
-        //
-
         doClose();
     }
 
@@ -1729,6 +1724,37 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
         if (logger.isDebugEnabled()) {
             logger.debug("[DO CLOSE] shutting down");
         }
+        
+    	if( needsSave.get() ) {
+    		
+    		if( logger.isDebugEnabled() ) {
+    			logger.debug("[CLOSE] profile needs saving");
+    		}
+    		
+            ButtonType myCancel = new ButtonType("Discard Changes", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            Alert alert = new Alert(
+                Alert.AlertType.CONFIRMATION,
+                "Save profile?",
+                ButtonType.OK,
+                myCancel);
+    		alert.setHeaderText("Unsaved profile");
+    		Optional<ButtonType> response = alert.showAndWait();
+    		if (!response.isPresent() || response.get() != ButtonType.OK) {
+    			if( logger.isDebugEnabled() ) {
+    				logger.debug("[CLOSE] skipping save");
+    			} 
+    		} else {
+    		
+    			if( logger.isDebugEnabled() ) {
+    				logger.debug("[CLOSE] saving");
+    			} 
+
+    			saveProfile();
+				needsSave.set(false);  // needed in case failure infinite cycle
+    		}
+    	}
+    	
         Platform.exit();
         System.exit(0);  // close webstart
     }
