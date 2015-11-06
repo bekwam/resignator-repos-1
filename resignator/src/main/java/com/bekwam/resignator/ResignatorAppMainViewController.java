@@ -2002,4 +2002,10 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
     public void showHelp() {
     	helpDelegate.showHelp();
     }
+    
+    @FXML
+    public void clearConsole() {
+    	txtConsole.clear();
+    	piSignProgress.setVisible(false);
+    }
 }
