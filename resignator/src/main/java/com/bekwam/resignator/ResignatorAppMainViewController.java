@@ -15,13 +15,41 @@
  */
 package com.bekwam.resignator;
 
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bekwam.jfxbop.view.Viewable;
+import com.bekwam.resignator.commands.KeytoolCommand;
 import com.bekwam.resignator.commands.SignCommand;
 import com.bekwam.resignator.commands.UnsignCommand;
 import com.bekwam.resignator.model.ConfigurationDataSource;
 import com.bekwam.resignator.model.Profile;
 import com.bekwam.resignator.model.SigningArgumentsType;
 import com.google.common.base.Preconditions;
+
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -33,7 +61,24 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -44,25 +89,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
 
 /**
  * JavaFX Controller and JFXBop View for the Resignator App
@@ -155,6 +181,9 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
     @Inject
     Provider<UnsignCommand> unsignCommandProvider;
 
+    @Inject
+    Provider<KeytoolCommand> keytoolCommandProvider;
+    
     @Inject
     Provider<NewPasswordController> newPasswordControllerProvider;
 
@@ -1157,7 +1186,48 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 
             isValid = false;
         }
+        
+        //
+        // #38 check keystore prior to running
+        //
+        KeytoolCommand keytoolCommand = keytoolCommandProvider.get();
+        
+        Task<Boolean> keytoolTask = new Task<Boolean>() {
+			@Override
+			protected Boolean call() throws Exception {
+				
+            	final List<String> aliases = keytoolCommand.findAliases(
+            			activeConfiguration.getKeytoolCommand().toString(),
+            			activeProfile.getJarsignerConfigKeystore(),
+            			activeProfile.getJarsignerConfigStorepass()
+    			);
+            	if( logger.isDebugEnabled() ) {
+            		logger.debug("[KEYTOOL] # aliases=" + CollectionUtils.size(aliases));
+            	}
+				
+				return true;
+			}
+        };
+        new Thread(keytoolTask).start();
+        
+        try {
+			if( !keytoolTask.get() ) {
+				if( logger.isDebugEnabled() ) {
+					logger.debug("[KEYTOOL] keystore or configuration not valid");
+				}
+				isValid = false;
+			}
+		} catch (InterruptedException|ExecutionException e) {
 
+			isValid = false;
+			logger.error( "error accessing keystore", e );
+            Alert alert = new Alert(
+                    Alert.AlertType.ERROR,
+                    e.getMessage()  // contains formatted string
+            );
+            alert.showAndWait();
+		}
+        
         return isValid;
     }
 
