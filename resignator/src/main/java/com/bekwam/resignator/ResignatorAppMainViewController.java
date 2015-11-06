@@ -442,7 +442,7 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
                 protected void succeeded() {
                     super.succeeded();
                     updateMessage("");
-                    Platform.runLater(() -> lblStatus.textProperty().unbind());
+                    lblStatus.textProperty().unbind();
                 }
 
                 @Override
@@ -450,7 +450,7 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
                     super.cancelled();
                     logger.error("task cancelled", getException());
                     updateMessage("");
-                    Platform.runLater(() -> lblStatus.textProperty().unbind());
+                    lblStatus.textProperty().unbind();
                 }
 
                 @Override
@@ -458,7 +458,7 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
                     super.failed();
                     logger.error("task failed", getException());
                     updateMessage("");
-                    Platform.runLater(() -> lblStatus.textProperty().unbind());
+                    lblStatus.textProperty().unbind();
                 }
             };
 
@@ -1364,10 +1364,8 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 	                updateProgress(1.0d, 1.0d);
 	                updateMessage("JARs signed successfully");
 	
-	                Platform.runLater(() -> {
-	                    piSignProgress.progressProperty().unbind();
-	                    lblStatus.textProperty().unbind();
-	                });
+                    piSignProgress.progressProperty().unbind();
+                    lblStatus.textProperty().unbind();
 	            }
 	
 	            @Override
@@ -1379,15 +1377,13 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 	                updateProgress(1.0d, 1.0d);
 	                updateMessage("Error signing JARs");
 	
-	                Platform.runLater(() -> {
-	                    piSignProgress.progressProperty().unbind();
-	                    lblStatus.textProperty().unbind();
+                    piSignProgress.progressProperty().unbind();
+                    lblStatus.textProperty().unbind();
 	
-	                    piSignProgress.setVisible(false);
+                    piSignProgress.setVisible(false);
 	
-	                    Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
-	                    alert.showAndWait();
-	                });
+                    Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
+                    alert.showAndWait();
 	            }
 	
 	            @Override
@@ -1520,10 +1516,8 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 	                updateProgress(1.0d, 1.0d);
 	                updateMessage("JAR signed successfully");
 	
-	                Platform.runLater(() -> {
-	                    piSignProgress.progressProperty().unbind();
-	                    lblStatus.textProperty().unbind();
-	                });
+                    piSignProgress.progressProperty().unbind();
+                    lblStatus.textProperty().unbind();
 	            }
 	
 	            @Override
@@ -1535,15 +1529,13 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 	                updateProgress(1.0d, 1.0d);
 	                updateMessage("Error signing JAR");
 	
-	                Platform.runLater(() -> {
-	                    piSignProgress.progressProperty().unbind();
-	                    lblStatus.textProperty().unbind();
+                    piSignProgress.progressProperty().unbind();
+                    lblStatus.textProperty().unbind();
 	
-	                    piSignProgress.setVisible(false);
+                    piSignProgress.setVisible(false);
 	
-	                    Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
-	                    alert.showAndWait();
-	                });
+                    Alert alert = new Alert(Alert.AlertType.ERROR, exceptionProperty().getValue().getMessage());
+                    alert.showAndWait();
 	            }
 	
 	            @Override
@@ -1557,15 +1549,13 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 	                updateProgress(1.0d, 1.0d);
 	                updateMessage("JAR signing cancelled");
 	
-	                Platform.runLater(() -> {
-	                    piSignProgress.progressProperty().unbind();
-	                    lblStatus.textProperty().unbind();
+                    piSignProgress.progressProperty().unbind();
+                    lblStatus.textProperty().unbind();
 	
-	                    piSignProgress.setVisible(false);
-	
-	                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "JAR signing cancelled");
-	                    alert.showAndWait();
-	                });
+                    piSignProgress.setVisible(false);
+
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "JAR signing cancelled");
+                    alert.showAndWait();
 	
 	            }
 	        };
@@ -1699,11 +1689,9 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
             @Override
             protected void failed() {
                 super.failed();
-                Platform.runLater(() -> {
-                    Alert alert = new Alert(Alert.AlertType.ERROR, getException().getMessage());
-                    alert.setHeaderText("Error deleting profile");
-                    alert.showAndWait();
-                });
+                Alert alert = new Alert(Alert.AlertType.ERROR, getException().getMessage());
+                alert.setHeaderText("Error deleting profile");
+                alert.showAndWait();
             }
 
         };
@@ -1845,33 +1833,29 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
             protected void failed() {
                 super.failed();
                 logger.error("can't rename profile from " + oldProfileName + " to " + newProfileName, getException());
-                Platform.runLater(() -> {
-                    Alert alert = new Alert(
-                            Alert.AlertType.ERROR,
-                            getException().getMessage());
-                    alert.setHeaderText("Can't rename profile '" + oldProfileName + "'");
-                    alert.showAndWait();
+                Alert alert = new Alert(
+                        Alert.AlertType.ERROR,
+                        getException().getMessage());
+                alert.setHeaderText("Can't rename profile '" + oldProfileName + "'");
+                alert.showAndWait();
 
-                    if (apProfileNameSetFlag) {  // revert
-                        activeProfile.setProfileName(oldProfileName);
-                    }
-                });
+                if (apProfileNameSetFlag) {  // revert
+                    activeProfile.setProfileName(oldProfileName);
+                }
             }
 
             @Override
             protected void cancelled() {
                 super.cancelled();
-                Platform.runLater(() -> {
-                    Alert alert = new Alert(
-                            Alert.AlertType.ERROR,
-                            "Rename cancelled by user");
-                    alert.setHeaderText("Cancelled");
-                    alert.showAndWait();
+                Alert alert = new Alert(
+                        Alert.AlertType.ERROR,
+                        "Rename cancelled by user");
+                alert.setHeaderText("Cancelled");
+                alert.showAndWait();
 
-                    if (apProfileNameSetFlag) {  // revert
-                        activeProfile.setProfileName(oldProfileName);
-                    }
-                });
+                if (apProfileNameSetFlag) {  // revert
+                    activeProfile.setProfileName(oldProfileName);
+                }
             }
         };
 
