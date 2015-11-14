@@ -837,6 +837,10 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
 
     void recordRecentProfile(String newProfileName) {
 
+    	if( activeConfiguration.getRecentProfiles().contains(newProfileName) ) {
+    		return;  // can assume activeConfiguration is accurate
+    	}
+    	
         //
         // #18 record recent history on save
         //
@@ -1724,7 +1728,20 @@ public class ResignatorAppMainViewController extends ResignatorBaseView {
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                configurationDS.deleteProfile(profileNameToDelete);
+
+            	//
+            	// #18 adjust record prior to dao call
+            	//
+                if( activeConfiguration.getRecentProfiles().contains(profileNameToDelete) ) {
+                	activeConfiguration.getRecentProfiles().remove(profileNameToDelete);
+                }
+                
+                if( StringUtils.equalsIgnoreCase(profileNameToDelete, activeConfiguration.getActiveProfile()) ) {
+                	activeConfiguration.setActiveProfile( null );
+                }
+                
+            	configurationDS.deleteProfile(profileNameToDelete);
+            	
                 return null;
             }
 

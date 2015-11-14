@@ -338,7 +338,6 @@ public class ConfigurationDataSourceImpl extends BaseManagedDataSource implement
 
             Profile key = new Profile(profileName, false, SigningArgumentsType.JAR);  // argsType not important
             configuration.get().getProfiles().remove(key);
-            configuration.get().getRecentProfiles().remove( profileName );
 
             if( logger.isDebugEnabled() ) {
                 logger.debug("[DELETE] before save # recent={}, # profiles={}",
