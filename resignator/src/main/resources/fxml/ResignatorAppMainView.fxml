@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.input.*?>
-<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.*?>
-
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
+<VBox xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+      minWidth="-Infinity" xmlns="http://javafx.com/javafx/8"
+      fx:controller="com.bekwam.resignator.ResignatorAppMainViewController">
    <children>
       <MenuBar VBox.vgrow="NEVER">
         <menus>
@@ -92,6 +92,8 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
+                         <Label text="Type:" GridPane.halignment="RIGHT"/>
+                         <ChoiceBox fx:id="cbType" prefWidth="150.0" GridPane.columnIndex="1"/>
                         <Label fx:id="lblSource" text="Source JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
                         <TextField fx:id="tfSourceFile" onKeyPressed="#clearValidationErrors" onMouseClicked="#clearValidationErrors" prefWidth="600.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                            <tooltip>
@@ -99,30 +101,6 @@
                            </tooltip>
                         </TextField>
                         <Button mnemonicParsing="false" onAction="#browseSource" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                         <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                           <children>
-                               <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure">
-                                   <HBox.margin>
-                                       <Insets right="10.0" />
-                                   </HBox.margin>
-                               </Button>
-                               <CheckBox fx:id="ckReplace" mnemonicParsing="false" text="Replace existing signatures?">
-                                   <HBox.margin>
-                                       <Insets right="10.0" />
-                                   </HBox.margin>
-                               </CheckBox>
-                               <Button mnemonicParsing="false" onAction="#sign" text="Sign" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                                   <HBox.margin>
-                                       <Insets right="10.0" />
-                                   </HBox.margin>
-                               </Button>
-                              <ProgressIndicator fx:id="piSignProgress" progress="0.0" visible="false">
-                                 <HBox.margin>
-                                    <Insets left="10.0" />
-                                 </HBox.margin>
-                              </ProgressIndicator>
-                           </children>
-                        </HBox>
                         <Label fx:id="lblTarget" text="Target JAR:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
                         <TextField fx:id="tfTargetFile" onKeyPressed="#clearValidationErrors" onMouseClicked="#clearValidationErrors" prefWidth="600.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                            <tooltip>
@@ -139,8 +117,32 @@
                               </Button>
                            </children>
                         </HBox>
-                        <Label text="Type:" GridPane.halignment="RIGHT" />
-                        <ChoiceBox fx:id="cbType" prefWidth="150.0" GridPane.columnIndex="1" />
+                         <HBox alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                             <children>
+                                 <Button mnemonicParsing="false" onAction="#openJarsignerConfig" text="Configure">
+                                     <HBox.margin>
+                                         <Insets right="10.0"/>
+                                     </HBox.margin>
+                                 </Button>
+                                 <CheckBox fx:id="ckReplace" mnemonicParsing="false"
+                                           text="Replace existing signatures?">
+                                     <HBox.margin>
+                                         <Insets right="10.0"/>
+                                     </HBox.margin>
+                                 </CheckBox>
+                                 <Button mnemonicParsing="false" onAction="#sign" text="Sign" GridPane.columnIndex="1"
+                                         GridPane.rowIndex="2">
+                                     <HBox.margin>
+                                         <Insets right="10.0"/>
+                                     </HBox.margin>
+                                 </Button>
+                                 <ProgressIndicator fx:id="piSignProgress" progress="0.0" visible="false">
+                                     <HBox.margin>
+                                         <Insets left="10.0"/>
+                                     </HBox.margin>
+                                 </ProgressIndicator>
+                             </children>
+                         </HBox>
                      </children>
                      <VBox.margin>
                         <Insets />
