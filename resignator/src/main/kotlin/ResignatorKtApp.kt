@@ -1,6 +1,8 @@
 import javafx.application.Platform
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.geometry.Insets
 import javafx.geometry.Orientation
+import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonBar
@@ -22,7 +24,7 @@ class Profile {
 
 class MainViewModel : ViewModel() {
 
-    val needsSave = SimpleBooleanProperty(true)
+    val needsSave = SimpleBooleanProperty()
 
     fun saveLastSelectedProfile() {}
 }
@@ -93,23 +95,71 @@ class MenuFragment : Fragment() {
 class ContentFragment : Fragment() {
 
     override val root = splitpane {
-
         vbox{
             splitpane {
                 vbox {
-                    label("Profile Browser")
-                    listview<Profile> {}
+                    label("Profile Browser") {
+                        padding = Insets(2.0)
+                    }
+                    listview<Profile> {
+                        vgrow = Priority.ALWAYS
+                    }
+                    spacing = 4.0
                 }
                 splitpane {
                     orientation = Orientation.VERTICAL
-                    gridpane {}
                     vbox {
-                        label("Console")
-                        textarea()
+                        label("Profile") {
+                            padding = Insets(2.0)
+                        }
+                        gridpane {
+                            row {
+                                label("Name")
+                                textfield()
+                            }
+                            row {
+                                label("Type")
+                                combobox<String>()
+                            }
+                            row {
+                                label("Source JAR")
+                                textfield()
+                                button("Browse")
+                            }
+                            row {
+                                label("Target JAR")
+                                textfield()
+                                button("Browse")
+                                button("Copy")
+                            }
+                            row {
+                                button("Configure")
+                                checkbox("Replace existing signatures?") { }
+                                button("Sign")
+                            }
+                            vgrow = Priority.ALWAYS
+                            vgap = 10.0
+                            hgap = 10.0
+                            padding = Insets(10.0)
+                            alignment = Pos.CENTER_LEFT
+                        }
+                        spacing = 4.0
+                    }
+                    vbox {
+                        label("Console") {
+                            padding = Insets(2.0)
+                        }
+                        textarea {
+                            vgrow = Priority.ALWAYS
+                        }
+                        spacing = 4.0
                     }
                 }
+                vgrow = Priority.ALWAYS
             }
+            padding = Insets(10.0)
         }
+        vgrow = Priority.ALWAYS
     }
 }
 
@@ -118,22 +168,19 @@ class StatusBarFragment : Fragment() {
     override val root = hbox {
         progressbar()
         label()
+        padding = Insets(10.0)
     }
 }
 
 class ResignatorMainView : View("Resignator") {
-
     override val root = vbox {
-
         add(MenuFragment::class)
         add(ContentFragment::class)
         add(StatusBarFragment::class)
     }
-
-
 }
 
 class ResignatorKtApp : App(ResignatorMainView::class) {
     override fun createPrimaryScene(view: UIComponent) =
-            Scene(view.root, 800.0, 600.0)
+            Scene(view.root, 1024.0, 768.0)
 }
