@@ -35,7 +35,7 @@ public class CommandExecutor {
 
     private Logger logger = LoggerFactory.getLogger(CommandExecutor.class);
 
-    private final static int DEFAULT_TIMEOUT_IN_SECONDS = 10;
+    private final static int DEFAULT_TIMEOUT_IN_SECONDS = 1000;
 
     private final Path workingDir;
     private final int timeoutInSeconds;
@@ -117,7 +117,12 @@ public class CommandExecutor {
             }
 
         } catch(Exception exc) {
-            String msg = String.format("error invoking command %s", cmdAndArgs[0]);
+            String cmdAndArgs_s = "";
+            for( String s : cmdAndArgs ){
+                cmdAndArgs_s += s;
+                cmdAndArgs_s += " ";
+            }
+            String msg = String.format("error invoking command %s", cmdAndArgs_s);
             logger.error( msg, exc );
             throw new CommandExecutionException(msg);
         } finally {
