@@ -1,16 +1,24 @@
+import javafx.animation.FadeTransition
 import javafx.application.Platform
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleDoubleProperty
+import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
+import javafx.scene.Node
+import javafx.scene.Parent
 import javafx.scene.Scene
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonBar
 import javafx.scene.control.ButtonType
+import javafx.scene.control.SplitPane
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCodeCombination
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.Priority
+import javafx.scene.layout.VBox
+import javafx.util.Duration
 import tornadofx.*
 
 /**
@@ -25,6 +33,12 @@ class Profile {
 class MainViewModel : ViewModel() {
 
     val needsSave = SimpleBooleanProperty()
+    val profileBrowserShowing = SimpleBooleanProperty(true)
+    val consoleShowing = SimpleBooleanProperty(true)
+
+    val taskRunning = SimpleBooleanProperty()
+    val taskProgress = SimpleDoubleProperty()
+    val taskMessage = SimpleStringProperty()
 
     fun saveLastSelectedProfile() {}
 }
@@ -49,8 +63,12 @@ class MenuFragment : Fragment() {
             menuitem(name = "Close", keyCombination = closeShortcut, onAction = { evt -> close() })
         }
         menu("View") {
-            checkmenuitem("Show Profile Browser", null, null)
-            checkmenuitem("Show Console", null, null)
+            checkmenuitem("Show Profile Browser", null, null) {
+                selectedProperty().bindBidirectional( mainViewModel.profileBrowserShowing )
+            }
+            checkmenuitem("Show Console", null, null) {
+                selectedProperty().bindBidirectional( mainViewModel.consoleShowing )
+            }
         }
         menu("Help") {
             menuitem("About")
@@ -94,10 +112,17 @@ class MenuFragment : Fragment() {
 
 class ContentFragment : Fragment() {
 
+    var outerContainer : SplitPane by singleAssign()
+    var innerContainer : SplitPane by singleAssign()
+    var consoleVBox : VBox by singleAssign()
+    var profileBrowserVBox : VBox by singleAssign()
+
+    val mainViewModel : MainViewModel by inject()
+
     override val root = splitpane {
         vbox{
-            splitpane {
-                vbox {
+            outerContainer = splitpane {
+                profileBrowserVBox = vbox {
                     label("Profile Browser") {
                         padding = Insets(2.0)
                     }
@@ -106,7 +131,7 @@ class ContentFragment : Fragment() {
                     }
                     spacing = 4.0
                 }
-                splitpane {
+                innerContainer = splitpane {
                     orientation = Orientation.VERTICAL
                     vbox {
                         label("Profile") {
@@ -145,7 +170,7 @@ class ContentFragment : Fragment() {
                         }
                         spacing = 4.0
                     }
-                    vbox {
+                    consoleVBox = vbox {
                         label("Console") {
                             padding = Insets(2.0)
                         }
@@ -161,13 +186,57 @@ class ContentFragment : Fragment() {
         }
         vgrow = Priority.ALWAYS
     }
+
+    init {
+
+        mainViewModel.consoleShowing.addListener {
+            observableValue, ov, nv -> showContentPanel(nv, innerContainer, consoleVBox, false)
+        }
+
+        mainViewModel.profileBrowserShowing.addListener {
+            observableValue, ov, nv -> showContentPanel(nv, outerContainer, profileBrowserVBox, true)
+        }
+    }
+
+    private fun showContentPanel(show : Boolean, container : SplitPane, panel : Node, first : Boolean) {
+
+        if( show && !container.items.contains(panel) ) {
+
+            panel.opacity = 0.0
+
+            if( !first ) {
+                container.items.add(panel)
+            } else {
+                container.items.add(0, panel)
+            }
+
+            panel.fade(Duration.millis(400.0), opacity=1.0)
+
+        } else if( !show && container.items.contains(panel) ) {
+
+            val ft = FadeTransition(Duration.millis(300.0), panel)
+            ft.fromValue = 1.0
+            ft.toValue = 0.1
+            ft.cycleCount = 1
+            ft.isAutoReverse = false
+            ft.play()
+            ft.setOnFinished { e -> container.items.remove(panel) }
+        }
+    }
 }
 
 class StatusBarFragment : Fragment() {
 
+    val mainViewModel : MainViewModel by inject()
+
     override val root = hbox {
-        progressbar()
-        label()
+        progressbar{
+            bind( mainViewModel.taskProgress )
+        }
+        label {
+            bind( mainViewModel.taskMessage )
+        }
+        visibleProperty().bind( mainViewModel.taskRunning )
         padding = Insets(10.0)
     }
 }
