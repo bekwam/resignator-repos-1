@@ -7,7 +7,6 @@ import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
 import javafx.scene.Node
-import javafx.scene.Parent
 import javafx.scene.Scene
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonBar
@@ -24,6 +23,8 @@ import tornadofx.*
 /**
  * Created by carl_000 on 1/9/2017.
  */
+
+val HELP_LINK = "http://www.bekwam.com/resignator/help.html"
 
 class Profile {
     var profileName by property<String>()
@@ -71,9 +72,18 @@ class MenuFragment : Fragment() {
             }
         }
         menu("Help") {
-            menuitem("About")
-            menuitem("Help")
+            menuitem("About", onAction = { evt -> about() })
+            menuitem("Help", onAction = { evt -> help() })
         }
+    }
+
+    private fun about() {
+        val aboutView = find( AboutView::class )
+        aboutView.openModal()
+    }
+
+    private fun help() {
+        println("TODO: call $HELP_LINK here")
     }
 
     private fun close() {
@@ -91,7 +101,7 @@ class MenuFragment : Fragment() {
                     ButtonType.CANCEL,
                     discardButton)
 
-            alert.setHeaderText("Unsaved profile")
+            alert.headerText = "Unsaved profile"
 
             alert.showAndWait().ifPresent { response ->
                 if( response == ButtonType.OK ) {
