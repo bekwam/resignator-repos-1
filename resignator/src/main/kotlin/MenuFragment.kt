@@ -1,4 +1,3 @@
-import com.sun.deploy.uitoolkit.impl.fx.HostServicesFactory
 import javafx.application.Platform
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonBar
@@ -50,7 +49,6 @@ class MenuFragment : Fragment() {
     }
 
     private fun help() {
-        HostServicesFactory.getInstance(FX.application).showDocument(HELP_LINK)
     }
 
     private fun close() {
